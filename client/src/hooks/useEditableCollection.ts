@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { CollectionApi } from '../api/mapApi';
 import { ApiError, describeError } from '../api/http';
 import type { EditableItem } from '../types';
+import { createResponseOrder } from './responseOrder';
 
 /**
  * State for one kind of map item (polygons or objects):
@@ -22,14 +23,25 @@ export function useEditableCollection<TItem extends EditableItem, TDto, TRequest
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
+  // One instance per hook; lazy init so it is not recreated on every render.
+  const [responseOrder] = useState(createResponseOrder);
 
-  const reload = useCallback(
-    async (signal?: AbortSignal) => {
-      const dtos = await api.list(signal);
+  /** Shows a full list from the server unless a newer one is already shown (see responseOrder.ts). */
+  const applyList = useCallback(
+    (ticket: number, dtos: TDto[]) => {
+      if (!responseOrder.tryApply(ticket)) return;
       setSaved(dtos.map(fromDto));
       setLoaded(true);
     },
-    [api, fromDto],
+    [fromDto, responseOrder],
+  );
+
+  const reload = useCallback(
+    async (signal?: AbortSignal) => {
+      const ticket = responseOrder.next();
+      applyList(ticket, await api.list(signal));
+    },
+    [api, applyList, responseOrder],
   );
 
   // Initial load. The abort guard also covers React StrictMode's double effect run.
@@ -38,10 +50,11 @@ export function useEditableCollection<TItem extends EditableItem, TDto, TRequest
     // Fetching from the server is synchronization with an external system; state is set after the response.
     // oxlint-disable-next-line react/set-state-in-effect
     reload(controller.signal).catch((e: unknown) => {
-      if (!controller.signal.aborted) setError(describeError(e));
+      // A failed initial load is irrelevant once newer data (e.g. a Save response) is already shown.
+      if (!controller.signal.aborted && !responseOrder.hasApplied) setError(describeError(e));
     });
     return () => controller.abort();
-  }, [reload]);
+  }, [reload, responseOrder]);
 
   /** Runs a server action with a busy flag and error reporting. */
   const run = useCallback(async (action: () => Promise<void>, itemNames?: readonly string[]) => {
@@ -72,13 +85,14 @@ export function useEditableCollection<TItem extends EditableItem, TDto, TRequest
     const batchIds = new Set(batch.map((d) => d.id));
 
     await run(async () => {
-      const result = await api.create(batch.map(toRequest));
-      setSaved(result.map(fromDto));
+      const ticket = responseOrder.next();
+      applyList(ticket, await api.create(batch.map(toRequest)));
+      // The batch is stored even if its list was not applied (a newer list already contains it).
       // Keep drafts created while the request was in flight.
       setDrafts((current) => current.filter((d) => !batchIds.has(d.id)));
       setSelectedId((current) => (current !== null && batchIds.has(current) ? null : current));
     }, batch.map((d) => d.name));
-  }, [api, drafts, fromDto, run, toRequest]);
+  }, [api, applyList, drafts, responseOrder, run, toRequest]);
 
   /** Deletes the selected item: drafts locally, saved items on the server. */
   const deleteSelected = useCallback(async () => {
