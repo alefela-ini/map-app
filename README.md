@@ -38,7 +38,8 @@ cd client && npm install && npm run dev            # UI on http://localhost:5173
 ### Tests
 
 ```bash
-cd server && dotnet test        # validator, services and HTTP contract tests (in-memory store)
+cd server && dotnet test        # validator, services, HTTP contract (in-memory) + MongoDB integration (Docker)
+cd server && dotnet test --filter "Category!=Integration"   # without Docker
 cd client && npm test           # geometry / mapping unit tests (Vitest)
 cd client && npm run lint
 ```
