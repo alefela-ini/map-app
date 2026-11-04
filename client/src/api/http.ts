@@ -24,15 +24,28 @@ interface ProblemDetails {
   errors?: Record<string, string[]>;
 }
 
+/**
+ * Upper bound for one request. Without it a connection that hangs would keep `busy` (and the disabled buttons)
+ * on until the browser gives up, which can take minutes. A timed-out Save may still have been stored on the
+ * server; retrying it is safe because every item carries its idempotency key (`clientId`).
+ */
+const REQUEST_TIMEOUT_MS = 15_000;
+
 export async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers);
   headers.set('Accept', 'application/json');
   if (init.body !== undefined) headers.set('Content-Type', 'application/json');
 
+  const timeout = AbortSignal.timeout(REQUEST_TIMEOUT_MS);
+  const signal = init.signal ? AbortSignal.any([init.signal, timeout]) : timeout;
+
   let response: Response;
   try {
-    response = await fetch(`${API_BASE_URL}${path}`, { ...init, headers });
+    response = await fetch(`${API_BASE_URL}${path}`, { ...init, headers, signal });
   } catch (error) {
+    if (error instanceof DOMException && error.name === 'TimeoutError') {
+      throw new ApiError('The server did not respond in time. Please try again.', 0);
+    }
     if (error instanceof DOMException && error.name === 'AbortError') throw error;
     throw new ApiError('Cannot reach the server. Is the API running?', 0);
   }

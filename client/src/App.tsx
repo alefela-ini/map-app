@@ -151,14 +151,19 @@ export default function App() {
     }
   };
 
-  // Warn before leaving the page with unsaved drafts.
+  // Warn before leaving the page with unsaved drafts or a polygon that is still being drawn.
   const unsavedCount = polygons.drafts.length + objects.drafts.length;
+  const hasUnsavedWork = unsavedCount > 0 || drawingVertices.length > 0;
   useEffect(() => {
-    if (unsavedCount === 0) return;
+    if (!hasUnsavedWork) return;
     const onBeforeUnload = (e: BeforeUnloadEvent) => e.preventDefault();
     window.addEventListener('beforeunload', onBeforeUnload);
     return () => window.removeEventListener('beforeunload', onBeforeUnload);
-  }, [unsavedCount]);
+  }, [hasUnsavedWork]);
+
+  // Buttons stay disabled until the first load finishes: draft names ("Polygon 3") are derived from the loaded list.
+  const polygonsBusy = polygons.busy || !polygons.loaded;
+  const objectsBusy = objects.busy || !objects.loaded;
 
   return (
     <div className="layout">
@@ -189,7 +194,7 @@ export default function App() {
           savedCount={polygons.saved.length}
           draftCount={polygons.drafts.length}
           selected={polygons.selected}
-          busy={polygons.busy}
+          busy={polygonsBusy}
           error={polygons.error}
           onAdd={startDrawing}
           onCancelDrawing={cancelMode}
@@ -205,7 +210,7 @@ export default function App() {
           savedCount={objects.saved.length}
           draftCount={objects.drafts.length}
           selected={objects.selected}
-          busy={objects.busy}
+          busy={objectsBusy}
           error={objects.error}
           onSymbolChange={setSymbol}
           onAdd={startPlacing}

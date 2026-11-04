@@ -4,6 +4,9 @@ import { ApiError, describeError } from '../api/http';
 import type { EditableItem } from '../types';
 import { createResponseOrder } from './responseOrder';
 
+/** How many times the initial GET is tried before the error is shown. */
+const INITIAL_LOAD_ATTEMPTS = 3;
+
 /**
  * State for one kind of map item (polygons or objects):
  * - `saved`  — what the server returned (the source of truth for the Map Data table),
@@ -44,15 +47,31 @@ export function useEditableCollection<TItem extends EditableItem, TDto, TRequest
     [api, applyList, responseOrder],
   );
 
-  // Initial load. The abort guard also covers React StrictMode's double effect run.
+  // Initial load, retried with back-off (1 s, 2 s) when the server is unreachable or answers 5xx.
+  // The abort guard also covers React StrictMode's double effect run.
   useEffect(() => {
     const controller = new AbortController();
+
+    const load = async () => {
+      for (let attempt = 1; ; attempt++) {
+        try {
+          await reload(controller.signal);
+          return;
+        } catch (e) {
+          // A failed initial load is irrelevant once newer data (e.g. a Save response) is already shown.
+          if (controller.signal.aborted || responseOrder.hasApplied) return;
+          const retryable = !(e instanceof ApiError) || e.status === 0 || e.status >= 500;
+          if (!retryable || attempt === INITIAL_LOAD_ATTEMPTS) {
+            setError(describeError(e));
+            return;
+          }
+          await new Promise((resolve) => setTimeout(resolve, 1000 * 2 ** (attempt - 1)));
+        }
+      }
+    };
+
     // Fetching from the server is synchronization with an external system; state is set after the response.
-    // oxlint-disable-next-line react/set-state-in-effect
-    reload(controller.signal).catch((e: unknown) => {
-      // A failed initial load is irrelevant once newer data (e.g. a Save response) is already shown.
-      if (!controller.signal.aborted && !responseOrder.hasApplied) setError(describeError(e));
-    });
+    void load();
     return () => controller.abort();
   }, [reload, responseOrder]);
 
