@@ -50,6 +50,31 @@ public sealed class ServiceTests
     }
 
     [Fact]
+    public async Task Retrying_a_save_with_the_same_client_ids_does_not_create_duplicates()
+    {
+        var service = new PolygonService(new InMemoryRepository<PolygonDocument>(), TimeProvider.System);
+        CreatePolygonRequest[] batch = [new("A", Square, "draft-1"), new("B", Square, "draft-2")];
+
+        await service.CreateManyAsync(batch, CancellationToken.None);
+        // The response was "lost": the client sends the same drafts again, plus a new one.
+        var result = await service.CreateManyAsync([.. batch, new("C", Square, "draft-3")], CancellationToken.None);
+
+        Assert.Equal(["A", "B", "C"], result.Select(p => p.Name));
+    }
+
+    [Fact]
+    public async Task Client_id_repeated_inside_one_batch_is_rejected()
+    {
+        var service = new PolygonService(new InMemoryRepository<PolygonDocument>(), TimeProvider.System);
+
+        var error = await Assert.ThrowsAsync<RequestValidationException>(() => service.CreateManyAsync(
+            [new CreatePolygonRequest("A", Square, "same"), new CreatePolygonRequest("B", Square, "same")],
+            CancellationToken.None));
+
+        Assert.True(error.Errors.ContainsKey("[1].clientId"));
+    }
+
+    [Fact]
     public async Task Too_long_name_is_rejected()
     {
         var service = new PolygonService(new InMemoryRepository<PolygonDocument>(), TimeProvider.System);

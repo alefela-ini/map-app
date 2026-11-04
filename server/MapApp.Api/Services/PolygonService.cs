@@ -45,6 +45,7 @@ public sealed class PolygonService(IRepository<PolygonDocument> repository, Time
     {
         var errors = new ValidationErrors();
         RequestRules.ValidateBatch(requests, errors);
+        RequestRules.ValidateClientIds(requests!.Select(r => r.ClientId), errors);
 
         var now = timeProvider.GetUtcNow().UtcDateTime;
         var documents = new List<PolygonDocument>(requests!.Count);
@@ -61,6 +62,7 @@ public sealed class PolygonService(IRepository<PolygonDocument> repository, Time
                 {
                     Id = ObjectId.GenerateNewId().ToString(),
                     Name = name,
+                    ClientId = request.ClientId,
                     Geometry = GeoJsonMapper.ToMongoPolygon(ring),
                     CreatedAt = now,
                 });

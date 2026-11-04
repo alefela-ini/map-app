@@ -39,6 +39,8 @@ export interface PolygonDto {
 
 export interface CreatePolygonRequest {
   name: string;
+  /** Idempotency key (the draft id): saving the same key again does not create a second item. */
+  clientId: string;
   geometry: PolygonGeometry;
 }
 
@@ -52,6 +54,8 @@ export interface MapObjectDto {
 
 export interface CreateMapObjectRequest {
   name: string;
+  /** Idempotency key (the draft id): saving the same key again does not create a second item. */
+  clientId: string;
   symbol: ObjectSymbol;
   geometry: PointGeometry;
 }

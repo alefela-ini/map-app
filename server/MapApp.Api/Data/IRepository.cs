@@ -15,6 +15,7 @@ public interface IRepository<T> where T : IDocument
 
     /// <summary>
     /// Inserts all documents. Either all of them are stored or none (best effort without transactions).
+    /// A document whose <see cref="IDocument.ClientId"/> is already stored is skipped, so retries are idempotent.
     /// </summary>
     Task InsertManyAsync(IReadOnlyCollection<T> documents, CancellationToken cancellationToken);
 

@@ -310,9 +310,9 @@
   <!-- ============================== Tests ============================== -->
   <rect x="20" y="1110" width="660" height="120" rx="12" fill="#fafafa" stroke="#9ca3af" stroke-width="1.2"/>
   <text x="36" y="1133" class="h">Tests</text>
-  <text x="36" y="1154" class="b"><tspan font-weight="700">server/MapApp.Api.Tests</tspan> (xUnit, 36 tests)</text>
+  <text x="36" y="1154" class="b"><tspan font-weight="700">server/MapApp.Api.Tests</tspan> (xUnit, 39 tests)</text>
   <text x="46" y="1172" class="m">GeometryValidatorTests  — closing, CCW, dedupe, bow-tie, ranges, holes</text>
   <text x="46" y="1188" class="m">ServiceTests            — batch all-or-nothing, names, full list</text>
   <text x="46" y="1204" class="m">ApiTests — WebApplicationFactory&lt;Program&gt;, IRepository → InMemoryRepository</text>
-  <text x="36" y="1222" class="b"><tspan font-weight="700">client</tspan> (Vitest, 14 tests): geo.test.ts, responseOrder.test.ts (stale responses)</text>
+  <text x="36" y="1222" class="b"><tspan font-weight="700">client</tspan> (Vitest, 15 tests): geo.test.ts, responseOrder.test.ts (stale responses)</text>
 </svg>

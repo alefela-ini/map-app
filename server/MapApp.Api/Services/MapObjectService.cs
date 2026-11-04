@@ -45,6 +45,7 @@ public sealed class MapObjectService(IRepository<MapObjectDocument> repository, 
     {
         var errors = new ValidationErrors();
         RequestRules.ValidateBatch(requests, errors);
+        RequestRules.ValidateClientIds(requests!.Select(r => r.ClientId), errors);
 
         var now = timeProvider.GetUtcNow().UtcDateTime;
         var documents = new List<MapObjectDocument>(requests!.Count);
@@ -67,6 +68,7 @@ public sealed class MapObjectService(IRepository<MapObjectDocument> repository, 
                 {
                     Id = ObjectId.GenerateNewId().ToString(),
                     Name = name,
+                    ClientId = request.ClientId,
                     Symbol = symbol,
                     Location = GeoJsonMapper.ToMongoPoint(position.Value),
                     CreatedAt = now,

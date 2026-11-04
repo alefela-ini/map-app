@@ -16,6 +16,10 @@ public sealed class MapObjectDocument : IDocument
 
     public required string Name { get; init; }
 
+    /// <inheritdoc />
+    [BsonIgnoreIfNull]
+    public string? ClientId { get; init; }
+
     public MapObjectSymbol Symbol { get; init; }
 
     public required GeoJsonPoint<GeoJson2DGeographicCoordinates> Location { get; init; }

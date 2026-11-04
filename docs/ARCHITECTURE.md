@@ -78,13 +78,18 @@ Things to notice:
 1. **The whole batch is validated before anything is written.** If any item is invalid, nothing is stored and
    the response lists every problem, keyed by `"[index].field"`. The client uses the index to name the
    draft ("Polygon 2: …").
-2. **Atomicity without transactions.** A standalone MongoDB server has no multi-document transactions. If
-   MongoDB still rejects a document (for example, the `2dsphere` index rejects a geometry with error 16755),
-   the repository deletes the documents of the batch that were already inserted and rethrows.
-3. **The server is the source of truth.** Save returns the full list, not only the new items, and the client
+2. **Best-effort atomicity, not a transaction.** A standalone MongoDB server has no multi-document
+   transactions. If MongoDB still rejects a document (for example, the `2dsphere` index rejects a geometry with
+   error 16755), the repository deletes the documents of the batch that were already inserted and rethrows.
+   This compensating action can itself fail, and a crash or lost connection mid-write can leave part of a batch.
+   A real transaction needs a replica set.
+3. **Retrying is idempotent.** Each item carries `clientId` (the draft's random id). The repository upserts by
+   it with `$setOnInsert`, backed by a unique partial index, so repeating a Save whose response was lost does
+   not create duplicates.
+4. **The server is the source of truth.** Save returns the full list, not only the new items, and the client
    replaces its `saved` array with it. Delete calls `reload()`. The client never patches its local copy by
    hand.
-4. **Drafts created during the request are kept.** The hook sends a snapshot of the drafts and, on success,
+5. **Drafts created during the request are kept.** The hook sends a snapshot of the drafts and, on success,
    removes only the drafts that were in that snapshot.
 
 Objects follow the same path: `ObjectsPanel` → objects hook → `POST /api/objects` → `MapObjectService` →

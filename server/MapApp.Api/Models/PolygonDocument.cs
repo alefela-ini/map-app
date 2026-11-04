@@ -16,6 +16,10 @@ public sealed class PolygonDocument : IDocument
 
     public required string Name { get; init; }
 
+    /// <inheritdoc />
+    [BsonIgnoreIfNull]
+    public string? ClientId { get; init; }
+
     public required GeoJsonPolygon<GeoJson2DGeographicCoordinates> Geometry { get; init; }
 
     public DateTime CreatedAt { get; init; }

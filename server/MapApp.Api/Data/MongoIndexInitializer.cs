@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using MapApp.Api.Models;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace MapApp.Api.Data;
@@ -48,7 +49,10 @@ public sealed class MongoIndexInitializer(
                     new CreateIndexModel<MapObjectDocument>(Builders<MapObjectDocument>.IndexKeys.Geo2DSphere(o => o.Location)),
                     cancellationToken: cancellationToken);
 
-                logger.LogInformation("MongoDB 2dsphere indexes are in place");
+                await polygons.Indexes.CreateOneAsync(UniqueClientId<PolygonDocument>(), cancellationToken: cancellationToken);
+                await objects.Indexes.CreateOneAsync(UniqueClientId<MapObjectDocument>(), cancellationToken: cancellationToken);
+
+                logger.LogInformation("MongoDB indexes are in place (2dsphere, unique clientId)");
                 return;
             }
             catch (MongoCommandException ex) when (PermanentErrorCodes.Contains(ex.Code))
@@ -69,4 +73,16 @@ public sealed class MongoIndexInitializer(
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+    /// <summary>
+    /// Unique idempotency key. Partial (only string values), so documents saved without a client id —
+    /// including data stored before this index existed — do not collide on a missing value.
+    /// </summary>
+    private static CreateIndexModel<T> UniqueClientId<T>() where T : IDocument => new(
+        Builders<T>.IndexKeys.Ascending(MongoRepository<T>.ClientIdField),
+        new CreateIndexOptions<T>
+        {
+            Unique = true,
+            PartialFilterExpression = Builders<T>.Filter.Type(MongoRepository<T>.ClientIdField, BsonType.String),
+        });
 }

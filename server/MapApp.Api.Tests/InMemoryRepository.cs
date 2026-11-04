@@ -29,7 +29,9 @@ public sealed class InMemoryRepository<T> : IRepository<T> where T : IDocument
     {
         lock (_lock)
         {
-            _items.AddRange(documents);
+            // Same contract as MongoRepository: a document whose client id is already stored is skipped.
+            _items.AddRange(documents.Where(d =>
+                d.ClientId is null || !_items.Any(existing => existing.ClientId == d.ClientId)));
         }
 
         return Task.CompletedTask;

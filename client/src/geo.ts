@@ -50,6 +50,7 @@ export function polygonToRequest(polygon: MapPolygon): CreatePolygonRequest {
   const ring = polygon.vertices.map(toPosition);
   return {
     name: polygon.name,
+    clientId: polygon.id,
     geometry: { type: 'Polygon', coordinates: [[...ring, ring[0]]] },
   };
 }
@@ -67,6 +68,7 @@ export function objectFromDto(dto: MapObjectDto): MapObject {
 export function objectToRequest(object: MapObject): CreateMapObjectRequest {
   return {
     name: object.name,
+    clientId: object.id,
     symbol: object.symbol,
     geometry: { type: 'Point', coordinates: toPosition(object.position) },
   };

@@ -107,6 +107,22 @@ public sealed class ApiTests : IClassFixture<ApiTests.Factory>
     }
 
     [Fact]
+    public async Task Repeated_post_with_the_same_client_id_is_idempotent()
+    {
+        var clientId = $"draft-{Guid.NewGuid():N}";
+        var body = $$"""
+            [{ "name": "Once", "clientId": "{{clientId}}", "symbol": "jeep", "geometry": { "type": "Point", "coordinates": [34.79, 32.07] } }]
+            """;
+
+        var first = await (await _client.PostAsync("/api/objects", Json(body))).Content.ReadFromJsonAsync<JsonElement>();
+        var retry = await _client.PostAsync("/api/objects", Json(body));
+        Assert.Equal(HttpStatusCode.OK, retry.StatusCode);
+        var second = await retry.Content.ReadFromJsonAsync<JsonElement>();
+
+        Assert.Equal(first.GetArrayLength(), second.GetArrayLength());
+    }
+
+    [Fact]
     public async Task Liveness_does_not_depend_on_the_database()
     {
         // No MongoDB here (and the index initializer is removed): the process is still reported alive.

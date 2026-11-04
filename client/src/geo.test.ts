@@ -48,6 +48,17 @@ describe('coordinate order', () => {
   });
 });
 
+describe('idempotency key', () => {
+  it('sends the draft id as clientId, so a retried Save cannot create duplicates', () => {
+    const polygon: MapPolygon = { id: 'draft-abc', name: 'A', saved: false, vertices: [ll(32, 34), ll(32, 35), ll(33, 35)] };
+
+    expect(polygonToRequest(polygon).clientId).toBe('draft-abc');
+    expect(objectToRequest({ id: 'draft-xyz', name: 'J', symbol: 'jeep', saved: false, position: ll(32, 34) }).clientId).toBe(
+      'draft-xyz',
+    );
+  });
+});
+
 describe('normalizeLatLng', () => {
   it('wraps longitudes from repeated world copies', () => {
     expect(normalizeLatLng(ll(10, 200)).lng).toBeCloseTo(-160);

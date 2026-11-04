@@ -16,9 +16,13 @@ import { ObjectsPanel } from './panels/ObjectsPanel';
 import { PolygonPanel } from './panels/PolygonPanel';
 import type { InteractionMode, LatLng, MapDataRow, ObjectSymbol } from './types';
 
-let draftCounter = 0;
-/** Local id for unsaved items. (`crypto.randomUUID` is unavailable on plain-HTTP non-localhost origins.) */
-const newDraftId = () => `draft-${Date.now()}-${++draftCounter}`;
+/**
+ * Random id for an unsaved item. It is also sent as `clientId`, the idempotency key that makes a retried Save
+ * safe, so it must be unique across tabs and users: 128 random bits, not a timestamp + counter.
+ * (`crypto.randomUUID` is unavailable on plain-HTTP non-localhost origins; `getRandomValues` works everywhere.)
+ */
+const newDraftId = () =>
+  `draft-${Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, '0')).join('')}`;
 
 const IDLE: InteractionMode = { kind: 'idle' };
 

@@ -76,12 +76,12 @@ All geometries are GeoJSON, positions are **`[longitude, latitude]`**. Errors us
 |----------|-----------------------|--------------------------------------------------------------------------------|
 | `GET`    | `/api/polygons`       | `200` list of polygons                                                         |
 | `GET`    | `/api/polygons/{id}`  | `200` polygon, `404`                                                           |
-| `POST`   | `/api/polygons`       | array of `{ name?, geometry: Polygon }` → `200` **full updated list**, `400`   |
+| `POST`   | `/api/polygons`       | array of `{ name?, clientId?, geometry: Polygon }` → `200` **full updated list**, `400` |
 | `DELETE` | `/api/polygons/{id}`  | `204`, `404`                                                                   |
 | `DELETE` | `/api/polygons`       | `204` (delete all)                                                             |
 | `GET`    | `/api/objects`        | `200` list of objects                                                          |
 | `GET`    | `/api/objects/{id}`   | `200` object, `404`                                                            |
-| `POST`   | `/api/objects`        | array of `{ name?, symbol: "marker" \| "jeep", geometry: Point }` → `200` full list, `400` |
+| `POST`   | `/api/objects`        | array of `{ name?, clientId?, symbol: "marker" \| "jeep", geometry: Point }` → `200` full list, `400` |
 | `DELETE` | `/api/objects/{id}`   | `204`, `404`                                                                   |
 | `DELETE` | `/api/objects`        | `204` (delete all)                                                             |
 | `GET`    | `/health/live`        | `200` while the process is running (liveness)                                  |
@@ -135,8 +135,13 @@ client/
   (`geo.ts`, `GeoJsonMapper`), which prevents swapped-axis bugs.
 - **Server is the source of truth.** Save returns the full list and the table renders only server data, so what you
   see in Map Data is what is in MongoDB.
-- **Batch save is all-or-nothing.** The whole batch is validated before writing. If MongoDB still rejects a document,
-  the already-written part of the batch is rolled back (a standalone MongoDB has no multi-document transactions).
+- **Batch save is all-or-nothing, best effort.** The whole batch is validated before writing. If MongoDB still rejects
+  a document, the already-written part of the batch is deleted again (a compensating action: a standalone MongoDB has
+  no multi-document transactions, so this is not a transaction — a crash or a lost connection mid-write can leave
+  part of a batch).
+- **Retrying a Save is safe.** Each item carries `clientId`, the draft's random id, used as an idempotency key: the
+  server upserts by it (`$setOnInsert`, unique index), so sending the same drafts again after a lost response stores
+  nothing twice. A `clientId` repeated inside one batch is rejected with 400.
 - **Geometry validation** mirrors what the `2dsphere` index accepts: valid ranges, ≥ 3 distinct vertices, no crossing
   or touching edges, non-zero area. Rings may be sent open or closed; the server closes them and orients them
   counter-clockwise (RFC 7946), keeping the first vertex. The client runs the same check before closing a polygon.
