@@ -96,7 +96,7 @@
   <text x="420" y="481" class="s">Marker | Jeep · Add · Save · Delete</text>
   <rect x="412" y="498" width="236" height="48" rx="5" class="c2"/>
   <text x="420" y="516" class="b" font-weight="700">MapDataPanel.tsx</text>
-  <text x="420" y="535" class="s">table Object / Lat / Lon, row click = select</text>
+  <text x="420" y="535" class="s">1 row per polygon (center), ▸ = vertices</text>
   <rect x="412" y="552" width="236" height="48" rx="5" class="c2"/>
   <text x="420" y="570" class="b" font-weight="700">Panel.tsx / Message</text>
   <text x="420" y="589" class="s">shared card layout + error banner</text>
@@ -314,5 +314,5 @@
   <text x="46" y="1172" class="m">GeometryValidatorTests  — closing, CCW, dedupe, bow-tie, ranges, holes</text>
   <text x="46" y="1188" class="m">ServiceTests            — batch all-or-nothing, names, full list</text>
   <text x="46" y="1204" class="m">ApiTests (in-memory) · MongoIntegrationTests (Testcontainers)</text>
-  <text x="36" y="1222" class="b"><tspan font-weight="700">client</tspan> (Vitest, 15 tests): geo.test.ts, responseOrder.test.ts (stale responses)</text>
+  <text x="36" y="1222" class="b"><tspan font-weight="700">client</tspan> (Vitest, 17 tests): geo.test.ts, responseOrder.test.ts (stale responses)</text>
 </svg>

@@ -167,5 +167,5 @@
   <text x="273" y="1202" class="note">setSaved(result.map(polygonFromDto))  — server is the source of truth</text>
   <text x="273" y="1217" class="note">drafts = drafts − batch (drafts added during the request survive) · busy = false</text>
   <path d="M422,1246 L258,1246" class="ret"/>
-  <text x="263" y="1240" class="msg">re-render: solid outline, Map Data rows (1 per vertex)</text>
+  <text x="263" y="1240" class="msg">re-render: solid outline, one Map Data row per polygon</text>
 </svg>

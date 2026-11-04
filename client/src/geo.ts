@@ -159,18 +159,52 @@ export function nextName(prefix: string, existingNames: readonly string[]): stri
   return `${prefix} ${max + 1}`;
 }
 
-/** Builds the "Map Data" rows: one row per object and one row per polygon vertex. */
+/**
+ * Center (centroid) of an open ring, computed in lng/lat space with the shoelace formula, so it lies at the
+ * "center of mass" of the shape rather than being pulled towards densely drawn edges. Falls back to the
+ * average of the vertices for a degenerate ring (zero area).
+ */
+export function polygonCentroid(vertices: readonly LatLng[]): LatLng {
+  let area2 = 0; // twice the signed area
+  let lat = 0;
+  let lng = 0;
+  for (let i = 0; i < vertices.length; i++) {
+    const a = vertices[i];
+    const b = vertices[(i + 1) % vertices.length];
+    const cross = a.lng * b.lat - b.lng * a.lat;
+    area2 += cross;
+    lng += (a.lng + b.lng) * cross;
+    lat += (a.lat + b.lat) * cross;
+  }
+
+  if (Math.abs(area2) < EPSILON) {
+    const n = Math.max(vertices.length, 1);
+    return {
+      lat: vertices.reduce((sum, v) => sum + v.lat, 0) / n,
+      lng: vertices.reduce((sum, v) => sum + v.lng, 0) / n,
+    };
+  }
+
+  return { lat: lat / (3 * area2), lng: lng / (3 * area2) };
+}
+
+/**
+ * Builds the "Map Data" rows: one row per object and one row per polygon. A polygon row shows the polygon's
+ * center and carries its vertices, which the table can expand underneath it.
+ */
 export function buildMapDataRows(polygons: readonly MapPolygon[], objects: readonly MapObject[]): MapDataRow[] {
-  const polygonRows = polygons.flatMap((polygon) =>
-    polygon.vertices.map((vertex, index) => ({
-      key: `p:${polygon.id}:${index}`,
+  const polygonRows = polygons.map((polygon) => {
+    const center = polygonCentroid(polygon.vertices);
+    return {
+      key: `p:${polygon.id}`,
       kind: 'polygon' as const,
       itemId: polygon.id,
-      label: `${polygon.name} · vertex ${index + 1}`,
-      lat: vertex.lat,
-      lng: vertex.lng,
-    })),
-  );
+      label: polygon.name,
+      lat: center.lat,
+      lng: center.lng,
+      vertices: polygon.vertices,
+    };
+  });
 
   const objectRows = objects.map((object) => ({
     key: `o:${object.id}`,

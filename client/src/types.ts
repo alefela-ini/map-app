@@ -86,12 +86,10 @@ export type InteractionMode =
   | { kind: 'drawPolygon' }
   | { kind: 'placeObject'; symbol: ObjectSymbol };
 
-/** One row of the "Map Data" table. */
-export interface MapDataRow {
-  key: string;
-  kind: 'polygon' | 'object';
-  itemId: string;
-  label: string;
-  lat: number;
-  lng: number;
-}
+/**
+ * One top-level row of the "Map Data" table. A polygon is a single row (its Lat / Lon is the polygon's center)
+ * that can be expanded to show its vertices; an object is a single row with its position.
+ */
+export type MapDataRow =
+  | { key: string; kind: 'polygon'; itemId: string; label: string; lat: number; lng: number; vertices: LatLng[] }
+  | { key: string; kind: 'object'; itemId: string; label: string; lat: number; lng: number };

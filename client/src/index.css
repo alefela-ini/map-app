@@ -318,3 +318,44 @@ kbd {
   background: #4d6b2f;
   border-radius: 50%;
 }
+
+/* Expand / collapse a polygon's vertices. Same width as the spacer, so all names line up. */
+.data-table__toggle,
+.data-table__toggle-spacer {
+  display: inline-block;
+  width: 18px;
+  height: 16px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+.data-table__toggle {
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 16px;
+  cursor: pointer;
+}
+
+.data-table__toggle:hover,
+.data-table__toggle:focus-visible {
+  background: var(--border);
+  color: inherit;
+}
+
+.data-table__meta {
+  color: var(--muted);
+}
+
+/* Vertex rows sit under their polygon: indented past the toggle and the dot, quieter text. */
+.data-table__vertex td {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.data-table__vertex td:first-child {
+  padding-left: 50px;
+}

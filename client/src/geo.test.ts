@@ -5,6 +5,7 @@ import {
   normalizeLatLng,
   objectFromDto,
   objectToRequest,
+  polygonCentroid,
   polygonFromDto,
   polygonProblem,
   polygonToRequest,
@@ -97,18 +98,31 @@ describe('nextName', () => {
   });
 });
 
+describe('polygonCentroid', () => {
+  it('returns the center of a square', () => {
+    expect(polygonCentroid([ll(0, 0), ll(0, 2), ll(2, 2), ll(2, 0)])).toEqual(ll(1, 1));
+  });
+
+  it('is the center of the area, not the average of unevenly spread vertices', () => {
+    // Square 0..2 with two extra points on its bottom edge: same shape, so the same center.
+    const center = polygonCentroid([ll(0, 0), ll(0, 0.5), ll(0, 1), ll(0, 2), ll(2, 2), ll(2, 0)]);
+    expect(center.lat).toBeCloseTo(1);
+    expect(center.lng).toBeCloseTo(1);
+  });
+});
+
 describe('buildMapDataRows', () => {
-  it('creates one row per polygon vertex and per object', () => {
+  it('creates one row per polygon (with its center and vertices) and one per object', () => {
+    const square = [ll(0, 0), ll(0, 2), ll(2, 2), ll(2, 0)];
     const rows = buildMapDataRows(
-      [{ id: 'p', name: 'Zone', saved: true, vertices: [ll(1, 2), ll(3, 4), ll(5, 6)] }],
+      [{ id: 'p', name: 'Zone', saved: true, vertices: square }],
       [{ id: 'o', name: 'Jeep 1', saved: true, symbol: 'jeep', position: ll(7, 8) }],
     );
 
-    expect(rows.map((r) => [r.label, r.lat, r.lng])).toEqual([
-      ['Zone · vertex 1', 1, 2],
-      ['Zone · vertex 2', 3, 4],
-      ['Zone · vertex 3', 5, 6],
-      ['Jeep 1', 7, 8],
+    expect(rows.map((r) => [r.kind, r.label, r.lat, r.lng])).toEqual([
+      ['polygon', 'Zone', 1, 1], // the polygon's center
+      ['object', 'Jeep 1', 7, 8],
     ]);
+    expect(rows[0].kind === 'polygon' && rows[0].vertices).toEqual(square);
   });
 });

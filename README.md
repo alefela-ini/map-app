@@ -64,7 +64,9 @@ The screen has four panels: **Map** (left), **Polygon**, **Objects** and **Map D
 - **Delete** – deletes the selected object (click it on the map or in the table).
 
 **Map Data** – `Object / Lat / Lon` for everything stored in the database: one row per object and one row per polygon
-vertex. It reflects the server state, so it changes after Save / Delete. Clicking a row selects the item and zooms to it.
+(its Lat / Lon is the polygon's center). The ▸ button expands a polygon's vertices underneath it. The table reflects
+the server state, so it changes after Save / Delete. Clicking a row selects the item and zooms to it; clicking a vertex
+zooms to that vertex.
 
 Unsaved items are drawn dashed / semi-transparent, and the browser warns before leaving the page while any exist.
 

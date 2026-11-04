@@ -128,7 +128,7 @@
   <text x="866" y="276" class="b">in drafts[] only — not on server</text>
   <text x="866" y="293" class="b">dashed polygon / faded icon</text>
   <text x="866" y="310" class="b">not in the Map Data table</text>
-  <text x="866" y="327" class="m">id: 'draft-1730…-3'</text>
+  <text x="866" y="327" class="m">id: 'draft-9f3c…' (random)</text>
   <text x="866" y="348" class="s">counted as "n unsaved" + beforeunload</text>
 
   <circle cx="790" cy="297" r="7" fill="#111827"/>

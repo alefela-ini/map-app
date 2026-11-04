@@ -151,6 +151,12 @@ export default function App() {
     }
   };
 
+  /** A vertex row of an expanded polygon: select the polygon and fly to that vertex. */
+  const onVertexClick = (polygonId: string, vertex: LatLng) => {
+    polygons.select(polygonId);
+    focusOn([vertex]);
+  };
+
   // Warn before leaving the page with unsaved drafts or a polygon that is still being drawn.
   const unsavedCount = polygons.drafts.length + objects.drafts.length;
   const hasUnsavedWork = unsavedCount > 0 || drawingVertices.length > 0;
@@ -226,6 +232,7 @@ export default function App() {
           selectedObjectId={objects.selectedId}
           unsavedCount={unsavedCount}
           onRowClick={onRowClick}
+          onVertexClick={onVertexClick}
         />
       </aside>
     </div>
