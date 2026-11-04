@@ -84,7 +84,11 @@ All geometries are GeoJSON, positions are **`[longitude, latitude]`**. Errors us
 | `POST`   | `/api/objects`        | array of `{ name?, symbol: "marker" \| "jeep", geometry: Point }` → `200` full list, `400` |
 | `DELETE` | `/api/objects/{id}`   | `204`, `404`                                                                   |
 | `DELETE` | `/api/objects`        | `204` (delete all)                                                             |
-| `GET`    | `/health`             | `200` when MongoDB is reachable, otherwise `503`                               |
+| `GET`    | `/health/live`        | `200` while the process is running (liveness)                                  |
+| `GET`    | `/health/ready`       | `200` when MongoDB is reachable, otherwise `503` (readiness)                   |
+
+The `2dsphere` indexes are created during startup, before the server starts listening, so no request can store a
+geometry before MongoDB is able to validate it.
 
 Example (`server/MapApp.Api/MapApp.Api.http` has more):
 

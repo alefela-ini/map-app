@@ -24,12 +24,20 @@ Every box in the diagrams is a real file or folder in the repository.
   to `http://api:8080`; in development, the Vite dev server proxies it to `localhost:5080`. The browser
   therefore never makes a cross-origin request. CORS is still configured on the API for the case where the
   client is served from a different origin (`Cors:AllowedOrigins`).
-- **Start-up order.** `api` waits for `mongo` to pass its health check, but it does not depend on that:
-  `MongoIndexInitializer` creates the `2dsphere` indexes in the background and retries with exponential
-  back-off (1 s up to 30 s) until MongoDB is reachable.
+- **Indexes before traffic.** `MongoIndexInitializer` is an `IHostedService`, and the host awaits its
+  `StartAsync` before the web server starts listening. So the `2dsphere` indexes always exist before the first
+  request, and no geometry can be stored before MongoDB is able to validate it. `createIndex` is idempotent,
+  so this runs on every start and on every instance.
+- **Transient and permanent errors.** If MongoDB is not reachable yet, the initializer retries with exponential
+  back-off (1 s up to 16 s) for up to a minute; the port stays closed meanwhile. If the index cannot be built at
+  all (invalid stored data: 16755; conflicting index definition: 85, 86; 67), retrying cannot help, so the
+  startup fails with a clear message and Docker restarts the container (`restart: unless-stopped`). In
+  docker-compose, `api` also waits for `mongo` to pass its health check.
 - **Configuration** comes from `appsettings.json` and is overridden by environment variables
   (`MongoDb__ConnectionString`, `MongoDb__DatabaseName`). `MongoDbSettings` is validated on start-up.
-- **Health check.** `GET /health` pings MongoDB and returns 200 or 503.
+- **Health checks.** `GET /health/live` reports that the process is up and does not touch MongoDB, so a
+  database outage never makes an orchestrator restart the API. `GET /health/ready` returns 200 when MongoDB
+  answers a ping. nginx does not proxy `/health`, so it is not public.
 - Map tiles are loaded by Leaflet directly from OpenStreetMap. They do not go through our server.
 
 ## 2. Component architecture
@@ -50,7 +58,7 @@ Every box in the diagrams is a real file or folder in the repository.
 
 | Layer | Files | Responsibility |
 |-------|-------|----------------|
-| Host | `Program.cs`, `Infrastructure/ServiceCollectionExtensions.cs` | DI registration, middleware order, JSON options (enums as camelCase strings, integers rejected), ProblemDetails, CORS, OpenAPI in Development, `/health`. |
+| Host | `Program.cs`, `Infrastructure/ServiceCollectionExtensions.cs` | DI registration, middleware order, JSON options (enums as camelCase strings, integers rejected), ProblemDetails, CORS, OpenAPI in Development, `/health/live` and `/health/ready`. |
 | HTTP | `Controllers/*`, `Contracts/*` | Thin controllers that only map results to 200, 204 or 404. The DTOs are plain GeoJSON. |
 | Application | `Services/*` | `CreateManyAsync` validates the whole batch first, then inserts it, then returns the full list. `GeoJsonMapper` is the only server code that converts between the DTOs and the MongoDB GeoJSON types. |
 | Domain rules | `Validation/*` | `GeometryValidator` is static and pure: it checks coordinate ranges, dedupes vertices, accepts open or closed rings, rejects self-intersections and zero area, and turns the ring counter-clockwise. Errors are collected per path and thrown as one `RequestValidationException`. |

@@ -106,5 +106,12 @@ public sealed class ApiTests : IClassFixture<ApiTests.Factory>
         Assert.Equal(HttpStatusCode.NotFound, (await _client.DeleteAsync("/api/objects/6aeafc7c256f30bae76b3377")).StatusCode);
     }
 
+    [Fact]
+    public async Task Liveness_does_not_depend_on_the_database()
+    {
+        // No MongoDB here (and the index initializer is removed): the process is still reported alive.
+        Assert.Equal(HttpStatusCode.OK, (await _client.GetAsync("/health/live")).StatusCode);
+    }
+
     private static StringContent Json(string json) => new(json, System.Text.Encoding.UTF8, "application/json");
 }

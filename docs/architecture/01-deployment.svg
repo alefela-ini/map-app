@@ -73,7 +73,7 @@
   <text x="625" y="310" class="m">MongoDb__ConnectionString=</text>
   <text x="625" y="326" class="m">  mongodb://mongo:27017</text>
   <text x="625" y="344" class="m">MongoDb__DatabaseName=mapapp</text>
-  <text x="625" y="362" class="s">GET /health → Mongo ping (200 / 503)</text>
+  <text x="625" y="362" class="s">/health/live · /health/ready (Mongo ping)</text>
 
   <!-- mongo container -->
   <rect x="930" y="160" width="220" height="210" rx="10" class="db"/>
@@ -108,7 +108,7 @@
   <path d="M435,370 C435,430 600,430 680,374" class="dep"/>
   <text x="330" y="440" class="s">depends_on: api (started)</text>
 
-  <text x="298" y="488" class="s">API is also reachable directly on :5080 (curl / Swagger-like tools); MongoIndexInitializer retries index creation, so start order is not critical.</text>
+  <text x="298" y="488" class="s">API is also reachable directly on :5080 (curl / Swagger-like tools); indexes are created at startup, before the API listens.</text>
 
   <!-- ===================== B. Local dev ===================== -->
   <text x="30" y="545" class="sec">B. LOCAL DEVELOPMENT — hot reload  →  http://localhost:5173</text>

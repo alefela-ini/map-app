@@ -174,7 +174,7 @@
   <rect x="780" y="118" width="620" height="104" rx="8" class="sv"/>
   <text x="792" y="139" class="h">Program.cs — host, DI and middleware pipeline (order matters)</text>
   <text x="792" y="160" class="m">UseExceptionHandler → UseStatusCodePages → MapOpenApi (dev only)</text>
-  <text x="792" y="176" class="m">→ UseCors("ClientPolicy": GET/POST/DELETE) → MapControllers · GET /health</text>
+  <text x="792" y="176" class="m">→ UseCors("ClientPolicy": GET/POST/DELETE) → MapControllers · /health/live, /health/ready</text>
   <text x="792" y="196" class="m">JSON: JsonStringEnumConverter(camelCase, allowIntegerValues: false)</text>
   <text x="792" y="213" class="s">AddProblemDetails · AddExceptionHandler&lt;ApiExceptionHandler&gt; · AddMongoPersistence · AddMapServices</text>
   <path d="M930,222 L930,246" class="a"/>
@@ -273,10 +273,10 @@
   <text x="1005" y="935" class="s">deleteMany(inserted ids) = rollback</text>
   <rect x="1225" y="852" width="165" height="94" rx="6" class="sv2"/>
   <text x="1235" y="872" class="h">MongoIndexInitializer</text>
-  <text x="1235" y="890" class="s">BackgroundService</text>
-  <text x="1235" y="905" class="s">creates 2dsphere indexes</text>
-  <text x="1235" y="920" class="s">retries 1s → 2s … ≤ 30s</text>
-  <text x="1235" y="935" class="s">until Mongo is reachable</text>
+  <text x="1235" y="890" class="s">IHostedService.StartAsync</text>
+  <text x="1235" y="905" class="s">2dsphere indexes BEFORE</text>
+  <text x="1235" y="920" class="s">the server listens; retries</text>
+  <text x="1235" y="935" class="s">≤ 1 min, bad data → fail</text>
   <path d="M1300,818 L1300,790" class="thr"/>
   <text x="1306" y="812" class="err">Mongo errors</text>
 
@@ -304,13 +304,13 @@
   <ellipse cx="1090" cy="1128" rx="310" ry="14" class="db"/>
   <text x="800" y="1162" class="h">MongoDB 8 · database mapapp</text>
   <text x="800" y="1182" class="m" style="font-size:10.5px">polygons   { _id, name, geometry: { type: "Polygon", coordinates: [[[lng,lat]…]] }, createdAt }</text>
-  <text x="800" y="1198" class="m" style="font-size:10.5px">mapObjects { _id, name, symbol: "jeep", location: { type: "Point", coordinates: [lng,lat] }, createdAt }</text>
+  <text x="800" y="1198" class="m" style="font-size:10.5px">mapObjects { _id, name, symbol: "Jeep", location: { type: "Point", coordinates: [lng,lat] }, createdAt }</text>
   <text x="800" y="1216" class="s">both geometry fields have a 2dsphere index → MongoDB itself rejects invalid GeoJSON (error 16755)</text>
 
   <!-- ============================== Tests ============================== -->
   <rect x="20" y="1110" width="660" height="120" rx="12" fill="#fafafa" stroke="#9ca3af" stroke-width="1.2"/>
   <text x="36" y="1133" class="h">Tests</text>
-  <text x="36" y="1154" class="b"><tspan font-weight="700">server/MapApp.Api.Tests</tspan> (xUnit, 35 tests)</text>
+  <text x="36" y="1154" class="b"><tspan font-weight="700">server/MapApp.Api.Tests</tspan> (xUnit, 36 tests)</text>
   <text x="46" y="1172" class="m">GeometryValidatorTests  — closing, CCW, dedupe, bow-tie, ranges, holes</text>
   <text x="46" y="1188" class="m">ServiceTests            — batch all-or-nothing, names, full list</text>
   <text x="46" y="1204" class="m">ApiTests — WebApplicationFactory&lt;Program&gt;, IRepository → InMemoryRepository</text>
