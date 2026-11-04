@@ -1,0 +1,40 @@
+# Full stack: MongoDB + ASP.NET Core API + React client (served by nginx).
+#   docker compose up --build        -> http://localhost:8080
+# For local development run only the database:
+#   docker compose up -d mongo
+services:
+  mongo:
+    image: mongo:8.0
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build: ./server
+    restart: unless-stopped
+    environment:
+      MongoDb__ConnectionString: mongodb://mongo:27017
+      MongoDb__DatabaseName: mapapp
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - "5080:8080"
+
+  client:
+    build: ./client
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "8080:80"
+
+volumes:
+  mongo-data:

@@ -1,0 +1,40 @@
+# Manual REST calls (VS Code REST Client / Rider / Visual Studio).
+@host = http://localhost:5080
+
+### List polygons
+GET {{host}}/api/polygons
+
+### Save polygons (GeoJSON, [lon, lat]; the ring may be open)
+POST {{host}}/api/polygons
+Content-Type: application/json
+
+[
+  {
+    "name": "Polygon 1",
+    "geometry": {
+      "type": "Polygon",
+      "coordinates": [[[34.78, 32.08], [34.80, 32.08], [34.80, 32.06]]]
+    }
+  }
+]
+
+### Delete one polygon
+DELETE {{host}}/api/polygons/{{id}}
+
+### Delete all polygons
+DELETE {{host}}/api/polygons
+
+### List objects
+GET {{host}}/api/objects
+
+### Save objects
+POST {{host}}/api/objects
+Content-Type: application/json
+
+[
+  { "name": "Jeep 1", "symbol": "jeep", "geometry": { "type": "Point", "coordinates": [34.79, 32.07] } },
+  { "name": "Marker 1", "symbol": "marker", "geometry": { "type": "Point", "coordinates": [34.77, 32.09] } }
+]
+
+### Delete one object
+DELETE {{host}}/api/objects/{{id}}

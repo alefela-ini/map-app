@@ -1,0 +1,171 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1320" width="1600" height="1320" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <style>
+    text { fill: #1f2937; }
+    .t { font-size: 22px; font-weight: 700; }
+    .st { font-size: 13px; fill: #6b7280; }
+    .h { font-size: 13px; font-weight: 700; }
+    .s { font-size: 11px; fill: #6b7280; }
+    .msg { font-size: 12px; }
+    .code { font-family: Consolas, Menlo, monospace; font-size: 11.5px; }
+    .note { font-size: 11.5px; fill: #374151; }
+    .err { fill: #b91c1c; }
+    .ok { fill: #047857; }
+    .frameL { font-size: 12px; font-weight: 700; fill: #374151; }
+    .u { fill: #f3f4f6; stroke: #6b7280; }
+    .c { fill: #eff6ff; stroke: #3b82f6; }
+    .s2 { fill: #ecfdf5; stroke: #10b981; }
+    .d { fill: #fffbeb; stroke: #d97706; }
+    .life { stroke: #c7cbd1; stroke-width: 1.2; stroke-dasharray: 4 4; }
+    .call { stroke: #374151; stroke-width: 1.4; fill: none; marker-end: url(#ah); }
+    .ret { stroke: #6b7280; stroke-width: 1.3; fill: none; stroke-dasharray: 6 4; marker-end: url(#ahg); }
+    .thr { stroke: #dc2626; stroke-width: 1.4; fill: none; stroke-dasharray: 5 3; marker-end: url(#ahr); }
+    .frame { fill: none; stroke: #9ca3af; stroke-width: 1.2; }
+    .nb { fill: #fefce8; stroke: #d6c26e; stroke-width: 1; }
+  </style>
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#374151"/></marker>
+    <marker id="ahg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker>
+    <marker id="ahr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#dc2626"/></marker>
+  </defs>
+  <rect width="1600" height="1320" fill="#ffffff"/>
+  <text x="20" y="36" class="t">3. Sequence: saving drawn polygons (POST batch, all-or-nothing)</text>
+  <text x="20" y="58" class="st">Objects use the same path (ObjectsPanel → objects hook → /api/objects → MapObjectService → ValidatePoint). Solid = call, dashed = return, red = error path.</text>
+  <line x1="95" y1="125" x2="95" y2="1270" class="life"/>
+  <rect x="20" y="78" width="150" height="46" rx="8" class="u" stroke-width="1.3"/>
+  <text x="95" y="98" text-anchor="middle" class="h">User</text>
+  <text x="95" y="115" text-anchor="middle" class="s"></text>
+  <rect x="20" y="1270" width="150" height="26" rx="6" class="u" stroke-width="1"/>
+  <text x="95" y="1287" text-anchor="middle" class="s">User</text>
+  <line x1="255" y1="125" x2="255" y2="1270" class="life"/>
+  <rect x="180" y="78" width="150" height="46" rx="8" class="c" stroke-width="1.3"/>
+  <text x="255" y="98" text-anchor="middle" class="h">PolygonPanel / App</text>
+  <text x="255" y="115" text-anchor="middle" class="s">React UI</text>
+  <rect x="180" y="1270" width="150" height="26" rx="6" class="c" stroke-width="1"/>
+  <text x="255" y="1287" text-anchor="middle" class="s">PolygonPanel / App</text>
+  <line x1="425" y1="125" x2="425" y2="1270" class="life"/>
+  <rect x="350" y="78" width="150" height="46" rx="8" class="c" stroke-width="1.3"/>
+  <text x="425" y="98" text-anchor="middle" class="h">useEditableCollection</text>
+  <text x="425" y="115" text-anchor="middle" class="s">polygons hook</text>
+  <rect x="350" y="1270" width="150" height="26" rx="6" class="c" stroke-width="1"/>
+  <text x="425" y="1287" text-anchor="middle" class="s">useEditableCollection</text>
+  <line x1="595" y1="125" x2="595" y2="1270" class="life"/>
+  <rect x="520" y="78" width="150" height="46" rx="8" class="c" stroke-width="1.3"/>
+  <text x="595" y="98" text-anchor="middle" class="h">mapApi / http.ts</text>
+  <text x="595" y="115" text-anchor="middle" class="s">fetch wrapper</text>
+  <rect x="520" y="1270" width="150" height="26" rx="6" class="c" stroke-width="1"/>
+  <text x="595" y="1287" text-anchor="middle" class="s">mapApi / http.ts</text>
+  <line x1="775" y1="125" x2="775" y2="1270" class="life"/>
+  <rect x="700" y="78" width="150" height="46" rx="8" class="s2" stroke-width="1.3"/>
+  <text x="775" y="98" text-anchor="middle" class="h">PolygonsController</text>
+  <text x="775" y="115" text-anchor="middle" class="s">+ ApiExceptionHandler</text>
+  <rect x="700" y="1270" width="150" height="26" rx="6" class="s2" stroke-width="1"/>
+  <text x="775" y="1287" text-anchor="middle" class="s">PolygonsController</text>
+  <line x1="955" y1="125" x2="955" y2="1270" class="life"/>
+  <rect x="880" y="78" width="150" height="46" rx="8" class="s2" stroke-width="1.3"/>
+  <text x="955" y="98" text-anchor="middle" class="h">PolygonService</text>
+  <text x="955" y="115" text-anchor="middle" class="s">scoped</text>
+  <rect x="880" y="1270" width="150" height="26" rx="6" class="s2" stroke-width="1"/>
+  <text x="955" y="1287" text-anchor="middle" class="s">PolygonService</text>
+  <line x1="1120" y1="125" x2="1120" y2="1270" class="life"/>
+  <rect x="1045" y="78" width="150" height="46" rx="8" class="s2" stroke-width="1.3"/>
+  <text x="1120" y="98" text-anchor="middle" class="h">GeometryValidator</text>
+  <text x="1120" y="115" text-anchor="middle" class="s">static</text>
+  <rect x="1045" y="1270" width="150" height="26" rx="6" class="s2" stroke-width="1"/>
+  <text x="1120" y="1287" text-anchor="middle" class="s">GeometryValidator</text>
+  <line x1="1285" y1="125" x2="1285" y2="1270" class="life"/>
+  <rect x="1210" y="78" width="150" height="46" rx="8" class="s2" stroke-width="1.3"/>
+  <text x="1285" y="98" text-anchor="middle" class="h">MongoRepository</text>
+  <text x="1285" y="115" text-anchor="middle" class="s">&lt;PolygonDocument&gt;</text>
+  <rect x="1210" y="1270" width="150" height="26" rx="6" class="s2" stroke-width="1"/>
+  <text x="1285" y="1287" text-anchor="middle" class="s">MongoRepository</text>
+  <line x1="1470" y1="125" x2="1470" y2="1270" class="life"/>
+  <rect x="1395" y="78" width="150" height="46" rx="8" class="d" stroke-width="1.3"/>
+  <text x="1470" y="98" text-anchor="middle" class="h">MongoDB</text>
+  <text x="1470" y="115" text-anchor="middle" class="s">polygons + 2dsphere</text>
+  <rect x="1395" y="1270" width="150" height="26" rx="6" class="d" stroke-width="1"/>
+  <text x="1470" y="1287" text-anchor="middle" class="s">MongoDB</text>
+  <path d="M98,160 L252,160" class="call"/>
+  <text x="103" y="154" class="msg">click “Save” (n unsaved polygons)</text>
+  <path d="M258,195 L422,195" class="call"/>
+  <text x="263" y="189" class="msg">polygons.saveDrafts()</text>
+  <path d="M428,215 h28 v16 h-26" class="call"/>
+  <text x="463" y="220" class="msg">busy = true · error = null · batch = drafts (snapshot)</text>
+  <path d="M428,268 L592,268" class="call"/>
+  <text x="433" y="262" class="msg">polygonsApi.create(batch.map(polygonToRequest))</text>
+  <text x="433" y="282" class="s">open ring of {lat, lng} → closed ring of [lng, lat]  (first vertex repeated)</text>
+  <path d="M598,318 L772,318" class="call"/>
+  <text x="603" y="312" class="msg"><tspan class="code">POST /api/polygons</tspan>   body: [ { name, geometry: { type: "Polygon", coordinates: [[[lng,lat], …]] } } ]</text>
+  <text x="603" y="332" class="s">via Vite / nginx proxy (same origin) · [ApiController] binds List&lt;CreatePolygonRequest&gt; · malformed JSON → automatic 400</text>
+  <path d="M778,372 L952,372" class="call"/>
+  <text x="783" y="366" class="msg">CreateManyAsync(requests)</text>
+  <path d="M958,388 h28 v16 h-26" class="call"/>
+  <text x="993" y="393" class="msg">RequestRules.ValidateBatch</text>
+  <text x="993" y="408" class="s">null / empty / &gt; 500 / null item → 400 immediately</text>
+  <rect x="935" y="430" width="335" height="130" class="frame" rx="4"/>
+  <path d="M935,430 h36.8 v14 l-6,6 h-30.799999999999997 z" fill="#f3f4f6" stroke="#9ca3af"/>
+  <text x="940" y="444" class="frameL">loop</text>
+  <text x="979.8" y="445" class="frameL">[ for each item i ]</text>
+  <path d="M958,460 h28 v16 h-26" class="call"/>
+  <text x="993" y="465" class="msg">NormalizeName(name, "Polygon")</text>
+  <text x="993" y="480" class="s">trim · empty → default · &gt; 100 chars → error</text>
+  <path d="M958,512 L1117,512" class="call"/>
+  <text x="963" y="506" class="msg">ValidatePolygon(geometry, "[i].geometry", errors)</text>
+  <path d="M1117,545 L958,545" class="ret"/>
+  <text x="963" y="539" class="msg">closed, CCW, de-duplicated ring  |  null (+ errors)</text>
+  <rect x="785" y="568" width="360" height="38" rx="5" class="nb"/>
+  <text x="793" y="585" class="note">ring ok → new PolygonDocument { ObjectId, Name,</text>
+  <text x="793" y="600" class="note">  GeoJsonMapper.ToMongoPolygon(ring), CreatedAt }</text>
+  <rect x="195" y="622" width="1355" height="636" class="frame" rx="4"/>
+  <path d="M195,622 h29.6 v14 l-6,6 h-23.6 z" fill="#f3f4f6" stroke="#9ca3af"/>
+  <text x="200" y="636" class="frameL">alt</text>
+  <text x="232.6" y="637" class="frameL">[ errors.HasErrors ]  — nothing has been written yet</text>
+  <path d="M952,662 L778,662" class="thr"/>
+  <text x="783" y="656" class="msg err">throw RequestValidationException(errors)</text>
+  <rect x="640" y="672" width="270" height="38" rx="5" class="nb"/>
+  <text x="648" y="689" class="note">ApiExceptionHandler →</text>
+  <text x="648" y="704" class="note">400 ValidationProblemDetails</text>
+  <path d="M772,735 L598,735" class="thr"/>
+  <text x="603" y="729" class="msg err">400  { title, errors: { "[1].geometry.coordinates": ["Polygon edges must not cross…"] } }</text>
+  <path d="M592,770 L428,770" class="thr"/>
+  <text x="433" y="764" class="msg err">throw ApiError(400, fieldErrors)</text>
+  <rect x="265" y="782" width="340" height="38" rx="5" class="nb"/>
+  <text x="273" y="799" class="note">describeError → “Polygon 2: Polygon edges must not cross…”</text>
+  <text x="273" y="814" class="note">error banner shown · all drafts kept · busy = false</text>
+  <line x1="195" y1="830" x2="1550" y2="830" stroke="#9ca3af" stroke-dasharray="7 4"/>
+  <text x="201" y="845" class="frameL">[ all items valid ]</text>
+  <path d="M958,868 L1282,868" class="call"/>
+  <text x="963" y="862" class="msg">InsertManyAsync(documents)</text>
+  <path d="M1288,898 L1467,898" class="call"/>
+  <text x="1293" y="892" class="msg">insertMany(ordered)</text>
+  <text x="1293" y="912" class="s">2dsphere index re-checks</text>
+  <rect x="725" y="925" width="815" height="133" class="frame" rx="4"/>
+  <path d="M725,925 h29.6 v14 l-6,6 h-23.6 z" fill="#f3f4f6" stroke="#9ca3af"/>
+  <text x="730" y="939" class="frameL">alt</text>
+  <text x="762.6" y="940" class="frameL">[ MongoBulkWriteException, e.g. 16755 “Can't extract geo keys” ]</text>
+  <path d="M1467,958 L1288,958" class="thr"/>
+  <text x="1293" y="952" class="msg err">error after k inserted</text>
+  <path d="M1288,983 L1467,983" class="call"/>
+  <text x="1293" y="977" class="msg">deleteMany(_id ∈ batch)</text>
+  <rect x="945" y="986" width="330" height="38" rx="5" class="nb"/>
+  <text x="953" y="1003" class="note">compensating rollback: a standalone MongoDB</text>
+  <text x="953" y="1018" class="note">has no multi-document transactions</text>
+  <path d="M1282,1048 L778,1048" class="thr"/>
+  <text x="783" y="1042" class="msg err">rethrow → ApiExceptionHandler → 400 (same client path as above)</text>
+  <path d="M958,1078 L1282,1078" class="call"/>
+  <text x="963" y="1072" class="msg">GetAllAsync()</text>
+  <path d="M1288,1096 L1467,1096" class="call"/>
+  <text x="1293" y="1090" class="msg">find().sort(_id)</text>
+  <path d="M1467,1112 L1288,1112" class="ret"/>
+  <text x="1293" y="1106" class="msg">all documents</text>
+  <path d="M952,1130 L778,1130" class="ret"/>
+  <text x="783" y="1124" class="msg">List&lt;PolygonDto&gt; via GeoJsonMapper.ToDto  (full list, not just the new ones)</text>
+  <path d="M772,1150 L598,1150" class="ret"/>
+  <text x="603" y="1144" class="msg">200 OK  [ every polygon in the database ]</text>
+  <path d="M592,1175 L428,1175" class="ret"/>
+  <text x="433" y="1169" class="msg">PolygonDto[]</text>
+  <rect x="265" y="1185" width="560" height="38" rx="5" class="nb"/>
+  <text x="273" y="1202" class="note">setSaved(result.map(polygonFromDto))  — server is the source of truth</text>
+  <text x="273" y="1217" class="note">drafts = drafts − batch (drafts added during the request survive) · busy = false</text>
+  <path d="M422,1246 L258,1246" class="ret"/>
+  <text x="263" y="1240" class="msg">re-render: solid outline, Map Data rows (1 per vertex)</text>
+</svg>

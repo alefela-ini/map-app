@@ -1,0 +1,318 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 1250" width="1440" height="1250" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <style>
+    text { fill: #1f2937; }
+    .t { font-size: 22px; font-weight: 700; }
+    .st { font-size: 13px; fill: #6b7280; }
+    .frameT { font-size: 15px; font-weight: 800; letter-spacing: .6px; }
+    .h { font-size: 13.5px; font-weight: 700; }
+    .b { font-size: 12px; }
+    .m { font-family: Consolas, Menlo, monospace; font-size: 11.5px; }
+    .s { font-size: 11px; fill: #6b7280; }
+    .lbl { font-size: 11px; fill: #374151; font-style: italic; }
+    .err { font-size: 11px; fill: #b91c1c; font-style: italic; }
+    .cf { fill: #f8fbff; stroke: #2563eb; stroke-width: 1.6; }
+    .sf { fill: #f7fdfa; stroke: #059669; stroke-width: 1.6; }
+    .c { fill: #eff6ff; stroke: #3b82f6; stroke-width: 1.2; }
+    .c2 { fill: #dbeafe; stroke: #3b82f6; stroke-width: 1; }
+    .sv { fill: #ecfdf5; stroke: #10b981; stroke-width: 1.2; }
+    .sv2 { fill: #d1fae5; stroke: #10b981; stroke-width: 1; }
+    .inf { fill: #fef2f2; stroke: #ef4444; stroke-width: 1.2; }
+    .db { fill: #fffbeb; stroke: #d97706; stroke-width: 1.5; }
+    .pure { fill: #f5f3ff; stroke: #8b5cf6; stroke-width: 1.2; }
+    .ext { fill: #f9fafb; stroke: #9ca3af; stroke-width: 1.1; stroke-dasharray: 4 3; }
+    .a { stroke: #374151; stroke-width: 1.5; fill: none; marker-end: url(#ah); }
+    .ret { stroke: #6b7280; stroke-width: 1.3; fill: none; stroke-dasharray: 6 4; marker-end: url(#ahg); }
+    .impl { stroke: #6b7280; stroke-width: 1.3; fill: none; stroke-dasharray: 3 3; marker-end: url(#aho); }
+    .thr { stroke: #dc2626; stroke-width: 1.4; fill: none; stroke-dasharray: 5 3; marker-end: url(#ahr); }
+  </style>
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#374151"/></marker>
+    <marker id="ahg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker>
+    <marker id="aho" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ffffff" stroke="#6b7280"/></marker>
+    <marker id="ahr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#dc2626"/></marker>
+  </defs>
+
+  <rect width="1440" height="1250" fill="#ffffff"/>
+  <text x="20" y="36" class="t">2. Component architecture (modules and dependencies)</text>
+  <text x="20" y="58" class="st">Every box is a real file / folder. Solid arrow = calls / uses. Dashed grey = response. Dotted with hollow head = implements. Red dashed = exception path.</text>
+
+  <!-- ============================== CLIENT ============================== -->
+  <rect x="20" y="80" width="660" height="1010" rx="14" class="cf"/>
+  <text x="40" y="104" class="frameT" fill="#1d4ed8">CLIENT — client/src  (React 19 · TypeScript · Vite · react-leaflet 5 / Leaflet 1.9)</text>
+
+  <!-- main.tsx -->
+  <rect x="40" y="120" width="200" height="50" rx="8" class="c"/>
+  <text x="52" y="141" class="h">main.tsx</text>
+  <text x="52" y="160" class="s">createRoot + &lt;StrictMode&gt;, leaflet.css</text>
+  <!-- types.ts -->
+  <rect x="440" y="120" width="220" height="50" rx="8" class="c2"/>
+  <text x="452" y="141" class="h">types.ts</text>
+  <text x="452" y="160" class="s">DTOs + view models, shared by all</text>
+  <path d="M140,170 L140,194" class="a"/>
+
+  <!-- App.tsx -->
+  <rect x="40" y="196" width="620" height="130" rx="8" class="c"/>
+  <text x="52" y="217" class="h">App.tsx — root component: owns the interaction state and wires map ↔ panels</text>
+  <text x="52" y="238" class="m">state   mode: idle | drawPolygon | placeObject(symbol)</text>
+  <text x="52" y="254" class="m">        drawingVertices, drawingProblem, symbol, focus {points, seq}</text>
+  <text x="52" y="272" class="m">logic   startDrawing · closePolygon (polygonProblem) · placeObject (nextName)</text>
+  <text x="52" y="288" class="m">        delete* with window.confirm · keys Esc, Backspace/Ctrl+Z · beforeunload</text>
+  <text x="52" y="306" class="m">derive  rows = buildMapDataRows(polygons.saved, objects.saved)  ← saved only</text>
+  <text x="52" y="320" class="s">useEditableCollection ×2: (polygonsApi + polygon mappers), (objectsApi + object mappers)</text>
+
+  <!-- props arrows -->
+  <path d="M200,326 L200,356" class="a"/>
+  <text x="206" y="345" class="lbl">props + callbacks</text>
+  <path d="M525,326 L525,356" class="a"/>
+  <text x="531" y="345" class="lbl">props + callbacks</text>
+
+  <!-- MapView group -->
+  <rect x="40" y="358" width="340" height="262" rx="8" class="c"/>
+  <text x="52" y="379" class="h">map/MapView.tsx — &lt;MapContainer&gt;</text>
+  <rect x="52" y="388" width="316" height="26" rx="5" class="c2"/>
+  <text x="60" y="405" class="b"><tspan font-weight="700">TileLayer</tspan> — OpenStreetMap raster tiles</text>
+  <rect x="52" y="418" width="316" height="26" rx="5" class="c2"/>
+  <text x="60" y="435" class="b"><tspan font-weight="700">&lt;Polygon&gt; / &lt;Marker&gt;</tspan> per item, key = id:interactive</text>
+  <rect x="52" y="448" width="316" height="26" rx="5" class="c2"/>
+  <text x="60" y="465" class="b"><tspan font-weight="700">DrawingLayer.tsx</tspan> click→vertex, ≤12px of 1st→close</text>
+  <rect x="52" y="478" width="316" height="26" rx="5" class="c2"/>
+  <text x="60" y="495" class="b"><tspan font-weight="700">PlacementLayer</tspan> next click → place object</text>
+  <rect x="52" y="508" width="316" height="26" rx="5" class="c2"/>
+  <text x="60" y="525" class="b"><tspan font-weight="700">FocusController</tspan> flyTo on Map Data row click</text>
+  <rect x="52" y="538" width="316" height="26" rx="5" class="c2"/>
+  <text x="60" y="555" class="b"><tspan font-weight="700">InitialFit</tspan> fitBounds once after first load</text>
+  <rect x="52" y="568" width="316" height="26" rx="5" class="c2"/>
+  <text x="60" y="585" class="b"><tspan font-weight="700">icons.ts</tspan> Leaflet pin + Jeep SVG divIcon, cached</text>
+  <text x="52" y="610" class="s">drafts: dashed polygons, faded icons, draggable markers</text>
+
+  <!-- Panels group -->
+  <rect x="400" y="358" width="260" height="262" rx="8" class="c"/>
+  <text x="412" y="379" class="h">panels/ — right column</text>
+  <rect x="412" y="390" width="236" height="48" rx="5" class="c2"/>
+  <text x="420" y="408" class="b" font-weight="700">PolygonPanel.tsx</text>
+  <text x="420" y="427" class="s">Add · Save · Delete selected · Delete all</text>
+  <rect x="412" y="444" width="236" height="48" rx="5" class="c2"/>
+  <text x="420" y="462" class="b" font-weight="700">ObjectsPanel.tsx</text>
+  <text x="420" y="481" class="s">Marker | Jeep · Add · Save · Delete</text>
+  <rect x="412" y="498" width="236" height="48" rx="5" class="c2"/>
+  <text x="420" y="516" class="b" font-weight="700">MapDataPanel.tsx</text>
+  <text x="420" y="535" class="s">table Object / Lat / Lon, row click = select</text>
+  <rect x="412" y="552" width="236" height="48" rx="5" class="c2"/>
+  <text x="420" y="570" class="b" font-weight="700">Panel.tsx / Message</text>
+  <text x="420" y="589" class="s">shared card layout + error banner</text>
+
+  <!-- App -> hooks (right margin) -->
+  <path d="M660,280 L670,280 L670,700 L662,700" class="a"/>
+  <!-- App -> geo (left margin) -->
+  <path d="M40,300 L30,300 L30,860 L38,860" class="a"/>
+
+  <!-- hooks -->
+  <rect x="40" y="650" width="620" height="122" rx="8" class="c"/>
+  <text x="52" y="671" class="h">hooks/useEditableCollection.ts — generic, one instance per resource (polygons, objects)</text>
+  <text x="52" y="692" class="m">state  saved (server truth) · drafts (browser only) · selectedId · busy · error · loaded</text>
+  <text x="52" y="710" class="m">ops    addDraft · updateDraft · reload (GET on mount, AbortController)</text>
+  <text x="52" y="726" class="m">       saveDrafts → POST drafts, replace saved with the returned full list</text>
+  <text x="52" y="742" class="m">       deleteSelected (draft: local only | saved: DELETE + reload) · deleteAll</text>
+  <text x="52" y="762" class="s">items = [...saved, ...drafts] → map;  saved → table;  errors → describeError(e, draftNames)</text>
+
+  <path d="M510,772 L510,800" class="a"/>
+  <text x="516" y="792" class="lbl">list / create / remove</text>
+
+  <!-- geo.ts -->
+  <rect x="40" y="800" width="300" height="170" rx="8" class="pure"/>
+  <text x="52" y="821" class="h">geo.ts — pure functions (Vitest)</text>
+  <text x="52" y="842" class="m">toPosition / fromPosition</text>
+  <text x="62" y="857" class="s">{lat, lng} ↔ GeoJSON [lng, lat]</text>
+  <text x="52" y="876" class="m">polygonFromDto / polygonToRequest</text>
+  <text x="62" y="891" class="s">closed ring (API) ↔ open ring (UI)</text>
+  <text x="52" y="910" class="m">objectFromDto / objectToRequest</text>
+  <text x="52" y="929" class="m">polygonProblem</text>
+  <text x="160" y="929" class="s">mirrors server rules</text>
+  <text x="52" y="948" class="m">normalizeLatLng · nextName</text>
+  <text x="52" y="964" class="m">buildMapDataRows · formatCoordinate</text>
+
+  <!-- mapApi.ts -->
+  <rect x="360" y="800" width="300" height="78" rx="8" class="c"/>
+  <text x="372" y="821" class="h">api/mapApi.ts — CollectionApi&lt;TDto, TReq&gt;</text>
+  <text x="372" y="842" class="m">polygonsApi → /api/polygons</text>
+  <text x="372" y="858" class="m">objectsApi  → /api/objects</text>
+  <text x="372" y="873" class="s">list(signal) · create(items) · remove(id) · removeAll()</text>
+  <path d="M510,878 L510,898" class="a"/>
+
+  <!-- http.ts -->
+  <rect x="360" y="898" width="300" height="100" rx="8" class="c"/>
+  <text x="372" y="919" class="h">api/http.ts — request&lt;T&gt;()</text>
+  <text x="372" y="939" class="b">fetch, JSON headers, 204 → undefined</text>
+  <text x="372" y="957" class="b">non-2xx ProblemDetails → ApiError</text>
+  <text x="382" y="972" class="s">(status, fieldErrors) · network error → status 0</text>
+  <text x="372" y="990" class="b">describeError: "[i].field" → item name</text>
+
+  <!-- external libs -->
+  <rect x="40" y="992" width="300" height="80" rx="8" class="ext"/>
+  <text x="52" y="1013" class="h">External libraries</text>
+  <text x="52" y="1033" class="b">react-leaflet hooks: useMap, useMapEvents</text>
+  <text x="52" y="1050" class="b">Leaflet: L.divIcon, latLngBounds, flyTo</text>
+  <text x="52" y="1066" class="s">used only inside map/</text>
+
+  <rect x="360" y="1016" width="300" height="56" rx="8" class="ext"/>
+  <text x="372" y="1037" class="h">Same-origin /api proxy</text>
+  <text x="372" y="1057" class="s">dev: Vite → :5080 · docker: nginx → api:8080</text>
+
+  <!-- ============================== HTTP BAND ============================== -->
+  <rect x="694" y="80" width="52" height="1010" rx="10" fill="#f3f4f6" stroke="#d1d5db"/>
+  <text transform="translate(726,585) rotate(-90)" text-anchor="middle" font-size="13" font-weight="700" fill="#4b5563">HTTP · REST · JSON · GeoJSON positions [longitude, latitude] · errors: application/problem+json (RFC 7807)</text>
+
+
+  <!-- ============================== SERVER ============================== -->
+  <rect x="760" y="80" width="660" height="1010" rx="14" class="sf"/>
+  <!-- request / response across the band (drawn after the server frame so they stay visible) -->
+  <path d="M660,935 L708,935 L708,150 L778,150" class="a"/>
+  <path d="M778,182 L738,182 L738,965 L662,965" class="ret"/>
+  <text x="780" y="104" class="frameT" fill="#047857">SERVER — server/MapApp.Api  (ASP.NET Core 9 · MongoDB.Driver 3)</text>
+
+  <!-- Program.cs -->
+  <rect x="780" y="118" width="620" height="104" rx="8" class="sv"/>
+  <text x="792" y="139" class="h">Program.cs — host, DI and middleware pipeline (order matters)</text>
+  <text x="792" y="160" class="m">UseExceptionHandler → UseStatusCodePages → MapOpenApi (dev only)</text>
+  <text x="792" y="176" class="m">→ UseCors("ClientPolicy": GET/POST/DELETE) → MapControllers · GET /health</text>
+  <text x="792" y="196" class="m">JSON: JsonStringEnumConverter(camelCase, allowIntegerValues: false)</text>
+  <text x="792" y="213" class="s">AddProblemDetails · AddExceptionHandler&lt;ApiExceptionHandler&gt; · AddMongoPersistence · AddMapServices</text>
+  <path d="M930,222 L930,246" class="a"/>
+  <path d="M1250,222 L1250,246" class="a"/>
+
+  <!-- Controllers -->
+  <rect x="780" y="248" width="300" height="92" rx="8" class="sv"/>
+  <text x="792" y="269" class="h">Controllers/PolygonsController</text>
+  <text x="792" y="288" class="m">[ApiController] api/polygons</text>
+  <text x="792" y="306" class="b">GET · GET {id} · POST [ ] · DELETE {id} · DELETE</text>
+  <text x="792" y="326" class="s">thin: maps result → 200 / 204 / 404, nothing else</text>
+  <rect x="1100" y="248" width="300" height="92" rx="8" class="sv"/>
+  <text x="1112" y="269" class="h">Controllers/ObjectsController</text>
+  <text x="1112" y="288" class="m">[ApiController] api/objects</text>
+  <text x="1112" y="306" class="b">GET · GET {id} · POST [ ] · DELETE {id} · DELETE</text>
+  <text x="1112" y="326" class="s">model binding: List&lt;Create*Request&gt; from body</text>
+
+  <!-- Contracts -->
+  <rect x="1000" y="356" width="400" height="56" rx="8" class="sv2"/>
+  <text x="1012" y="377" class="h">Contracts/ — API DTO records</text>
+  <text x="1012" y="397" class="m">PolygonDto · MapObjectDto · Create*Request · *Geometry</text>
+
+  <path d="M880,340 L880,436" class="a"/>
+  <text x="886" y="380" class="lbl">IPolygonService /</text>
+  <text x="886" y="394" class="lbl">IMapObjectService</text>
+  <path d="M1250,340 L1250,354" class="a"/>
+
+  <!-- Services -->
+  <rect x="780" y="438" width="400" height="160" rx="8" class="sv"/>
+  <text x="792" y="459" class="h">Services/PolygonService · MapObjectService (scoped)</text>
+  <text x="792" y="480" class="b" font-weight="700">CreateManyAsync(batch) — all-or-nothing:</text>
+  <text x="792" y="499" class="m">1 RequestRules.ValidateBatch  (1..500 items, no nulls)</text>
+  <text x="792" y="516" class="m">2 per item: NormalizeName (trim, ≤100, default)</text>
+  <text x="792" y="531" class="m">            + GeometryValidator → errors["[i].…"]</text>
+  <text x="792" y="548" class="m">3 errors.ThrowIfAny()   ← nothing written yet</text>
+  <text x="792" y="565" class="m">4 repository.InsertManyAsync(documents)</text>
+  <text x="792" y="582" class="m">5 return GetAllAsync()  ← full updated list</text>
+  <text x="792" y="594" class="s">GetAll / GetById / Delete / DeleteAll just delegate to the repository</text>
+
+  <!-- GeoJsonMapper -->
+  <rect x="1200" y="438" width="200" height="160" rx="8" class="sv2"/>
+  <text x="1212" y="459" class="h">GeoJsonMapper (static)</text>
+  <text x="1212" y="480" class="b">DTO ↔ MongoDB GeoJSON model</text>
+  <text x="1212" y="500" class="m">ToMongoPolygon(ring)</text>
+  <text x="1212" y="516" class="m">ToMongoPoint(position)</text>
+  <text x="1212" y="532" class="m">ToDto(document)</text>
+  <text x="1212" y="556" class="s">the only server code that</text>
+  <text x="1212" y="570" class="s">knows the lng/lat ↔ object</text>
+  <text x="1212" y="584" class="s">model mapping</text>
+  <path d="M1180,518 L1198,518" class="a"/>
+
+  <!-- Validation -->
+  <path d="M980,598 L980,626" class="a"/>
+  <rect x="780" y="628" width="400" height="160" rx="8" class="sv"/>
+  <text x="792" y="649" class="h">Validation/GeometryValidator (static, pure)</text>
+  <text x="792" y="669" class="b">Point: type == "Point", [lon, lat], finite, lon ±180, lat ±90</text>
+  <text x="792" y="688" class="b" font-weight="700">Polygon pipeline (order is deliberate):</text>
+  <text x="792" y="706" class="m">1 exactly one ring, ≤ 1000 vertices, valid positions</text>
+  <text x="792" y="722" class="m">2 drop consecutive duplicates, accept open/closed</text>
+  <text x="792" y="738" class="m">3 ≥ 3 vertices → self-intersection → zero area</text>
+  <text x="792" y="754" class="m">4 CW → CCW via Reverse(1, n-1) (keeps 1st vertex)</text>
+  <text x="792" y="770" class="m">5 close the ring (append first vertex)</text>
+  <text x="792" y="784" class="s">ValidationErrors → RequestValidationException (HTTP 400)</text>
+
+  <!-- Infrastructure -->
+  <rect x="1200" y="628" width="200" height="160" rx="8" class="inf"/>
+  <text x="1212" y="649" class="h">Infrastructure/</text>
+  <text x="1212" y="668" class="b" font-weight="700">ApiExceptionHandler</text>
+  <text x="1212" y="686" class="m">Validation    → 400</text>
+  <text x="1212" y="702" class="m">Mongo 16755   → 400</text>
+  <text x="1212" y="718" class="m">Timeout/Conn  → 503</text>
+  <text x="1212" y="734" class="m">other         → 500</text>
+  <text x="1212" y="756" class="b" font-weight="700">ServiceCollectionExtensions</text>
+  <text x="1212" y="774" class="s">DI grouped by layer</text>
+  <path d="M1180,742 L1198,742" class="thr"/>
+  <text x="1100" y="804" class="err">throws</text>
+
+  <!-- Services -> Data via left margin -->
+  <path d="M780,560 L770,560 L770,880 L793,880" class="a"/>
+
+  <!-- Data -->
+  <rect x="780" y="818" width="620" height="140" rx="8" class="sv"/>
+  <text x="792" y="839" class="h">Data/ — persistence · MongoConventions: camelCase, enums as strings</text>
+  <rect x="795" y="852" width="180" height="94" rx="6" class="sv2"/>
+  <text x="805" y="872" class="h">IRepository&lt;T&gt;</text>
+  <text x="805" y="890" class="s">GetAll · GetById</text>
+  <text x="805" y="905" class="s">InsertMany · Delete</text>
+  <text x="805" y="920" class="s">DeleteAll</text>
+  <text x="805" y="938" class="s">T : IDocument</text>
+  <path d="M975,899 L993,899" class="impl"/>
+  <rect x="995" y="852" width="215" height="94" rx="6" class="sv2"/>
+  <text x="1005" y="872" class="h">MongoRepository&lt;T&gt;</text>
+  <text x="1005" y="890" class="s">singleton, open generic</text>
+  <text x="1005" y="905" class="s">sort by _id · bad ObjectId → 404</text>
+  <text x="1005" y="920" class="s">InsertMany ordered; on failure</text>
+  <text x="1005" y="935" class="s">deleteMany(inserted ids) = rollback</text>
+  <rect x="1225" y="852" width="165" height="94" rx="6" class="sv2"/>
+  <text x="1235" y="872" class="h">MongoIndexInitializer</text>
+  <text x="1235" y="890" class="s">BackgroundService</text>
+  <text x="1235" y="905" class="s">creates 2dsphere indexes</text>
+  <text x="1235" y="920" class="s">retries 1s → 2s … ≤ 30s</text>
+  <text x="1235" y="935" class="s">until Mongo is reachable</text>
+  <path d="M1300,818 L1300,790" class="thr"/>
+  <text x="1306" y="812" class="err">Mongo errors</text>
+
+  <!-- Models / Config -->
+  <rect x="780" y="975" width="300" height="100" rx="8" class="sv2"/>
+  <text x="792" y="996" class="h">Models/ — stored documents</text>
+  <text x="792" y="1015" class="m">PolygonDocument</text>
+  <text x="792" y="1030" class="s">  Id, Name, Geometry: GeoJsonPolygon, CreatedAt</text>
+  <text x="792" y="1047" class="m">MapObjectDocument</text>
+  <text x="792" y="1062" class="s">  Id, Name, Symbol, Location: GeoJsonPoint, CreatedAt</text>
+  <rect x="1100" y="975" width="170" height="100" rx="8" class="sv2"/>
+  <text x="1112" y="996" class="h">Configuration/</text>
+  <text x="1112" y="1015" class="m">MongoDbSettings</text>
+  <text x="1112" y="1030" class="s">[Required], ValidateOnStart</text>
+  <text x="1112" y="1048" class="m">CorsSettings</text>
+  <text x="1112" y="1063" class="s">AllowedOrigins</text>
+
+  <!-- arrows to MongoDB -->
+  <path d="M1090,946 L1090,1118" class="a"/>
+  <path d="M1330,946 L1330,1118" class="a"/>
+  <text x="1338" y="1000" class="lbl">createIndex</text>
+
+  <!-- ============================== MongoDB ============================== -->
+  <path d="M780,1128 a310,14 0 0,0 620,0 v84 a310,14 0 0,1 -620,0 z" class="db"/>
+  <ellipse cx="1090" cy="1128" rx="310" ry="14" class="db"/>
+  <text x="800" y="1162" class="h">MongoDB 8 · database mapapp</text>
+  <text x="800" y="1182" class="m" style="font-size:10.5px">polygons   { _id, name, geometry: { type: "Polygon", coordinates: [[[lng,lat]…]] }, createdAt }</text>
+  <text x="800" y="1198" class="m" style="font-size:10.5px">mapObjects { _id, name, symbol: "jeep", location: { type: "Point", coordinates: [lng,lat] }, createdAt }</text>
+  <text x="800" y="1216" class="s">both geometry fields have a 2dsphere index → MongoDB itself rejects invalid GeoJSON (error 16755)</text>
+
+  <!-- ============================== Tests ============================== -->
+  <rect x="20" y="1110" width="660" height="120" rx="12" fill="#fafafa" stroke="#9ca3af" stroke-width="1.2"/>
+  <text x="36" y="1133" class="h">Tests</text>
+  <text x="36" y="1154" class="b"><tspan font-weight="700">server/MapApp.Api.Tests</tspan> (xUnit, 35 tests)</text>
+  <text x="46" y="1172" class="m">GeometryValidatorTests  — closing, CCW, dedupe, bow-tie, ranges, holes</text>
+  <text x="46" y="1188" class="m">ServiceTests            — batch all-or-nothing, names, full list</text>
+  <text x="46" y="1204" class="m">ApiTests — WebApplicationFactory&lt;Program&gt;, IRepository → InMemoryRepository</text>
+  <text x="36" y="1222" class="b"><tspan font-weight="700">client</tspan> (Vitest, 11 tests): geo.test.ts — axis order, normalizeLatLng, polygonProblem, nextName, rows</text>
+</svg>

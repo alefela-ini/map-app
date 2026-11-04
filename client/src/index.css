@@ -1,0 +1,320 @@
+:root {
+  --bg: #f3f4f6;
+  --surface: #ffffff;
+  --border: #e5e7eb;
+  --text: #111827;
+  --muted: #6b7280;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --danger: #dc2626;
+  --danger-hover: #b91c1c;
+  --selected: #7c3aed;
+  --draft: #ea580c;
+  --info-bg: #eff6ff;
+  --error-bg: #fef2f2;
+  --side-width: 400px;
+
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--bg);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+/* ---- Layout: map on the left, three stacked panels on the right ---------- */
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--side-width);
+  height: 100%;
+}
+
+.layout__map {
+  min-width: 0;
+  min-height: 0;
+}
+
+.layout__side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  min-height: 0;
+  overflow: hidden;
+  border-left: 1px solid var(--border);
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: 60vh auto;
+    height: auto;
+  }
+
+  .layout__side {
+    border-left: 0;
+    border-top: 1px solid var(--border);
+    overflow: visible;
+  }
+}
+
+/* ---- Map -------------------------------------------------------------------- */
+
+.map {
+  width: 100%;
+  height: 100%;
+}
+
+.map.map--drawing,
+.map.map--placing {
+  cursor: crosshair;
+}
+
+.map-icon--draft {
+  opacity: 0.75;
+}
+
+.map-icon--selected {
+  filter: drop-shadow(0 0 3px var(--selected)) drop-shadow(0 0 3px var(--selected));
+}
+
+/* Leaflet copies an icon's className onto its shadow image too; keep the shadow plain. */
+.leaflet-marker-shadow.map-icon {
+  filter: none;
+}
+
+.map-icon--jeep {
+  background: transparent;
+  border: 0;
+}
+
+/* ---- Panels ----------------------------------------------------------------- */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+}
+
+.panel--grow {
+  flex: 1;
+  min-height: 200px;
+}
+
+.panel__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.panel__header h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.panel__status {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+button {
+  font: inherit;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  background: var(--bg);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+button.primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+button.primary:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+button.danger {
+  color: var(--danger);
+  border-color: #fecaca;
+}
+
+button.danger:hover:not(:disabled) {
+  background: var(--error-bg);
+  color: var(--danger-hover);
+}
+
+button:focus-visible,
+input:focus-visible,
+tr:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.symbol-picker {
+  display: flex;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.symbol-picker legend {
+  float: left;
+  margin-right: 4px;
+  color: var(--muted);
+}
+
+.symbol-picker label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.message {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.message--info {
+  background: var(--info-bg);
+}
+
+.message--error {
+  background: var(--error-bg);
+  color: var(--danger-hover);
+}
+
+.message__close {
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 16px;
+  line-height: 1;
+}
+
+kbd {
+  padding: 0 4px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--surface);
+  font-size: 12px;
+}
+
+/* ---- Map Data table ------------------------------------------------------- */
+
+.table-wrapper {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.data-table th,
+.data-table td {
+  padding: 6px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.data-table th {
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  font-weight: 600;
+}
+
+.data-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.data-table tbody tr {
+  cursor: pointer;
+}
+
+.data-table tbody tr:hover {
+  background: var(--bg);
+}
+
+.data-table tbody tr.is-selected {
+  background: #ede9fe;
+}
+
+.data-table__empty {
+  color: var(--muted);
+  text-align: center !important;
+  cursor: default;
+}
+
+.kind-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 8px;
+  border-radius: 2px;
+  vertical-align: middle;
+}
+
+.kind-dot--polygon {
+  background: var(--primary);
+}
+
+.kind-dot--object {
+  background: #4d6b2f;
+  border-radius: 50%;
+}

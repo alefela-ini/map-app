@@ -1,0 +1,148 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" width="1200" height="700" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <style>
+    text { fill: #1f2937; }
+    .t { font-size: 22px; font-weight: 700; }
+    .st { font-size: 13px; fill: #6b7280; }
+    .sec { font-size: 14px; font-weight: 700; fill: #4b5563; letter-spacing: .5px; }
+    .h { font-size: 15px; font-weight: 700; }
+    .b { font-size: 12.5px; }
+    .m { font-family: Consolas, Menlo, monospace; font-size: 12px; }
+    .s { font-size: 11.5px; fill: #6b7280; }
+    .lbl { font-size: 12px; fill: #374151; }
+    .client { fill: #eff6ff; stroke: #2563eb; stroke-width: 1.5; }
+    .proxy { fill: #f5f3ff; stroke: #7c3aed; stroke-width: 1.5; }
+    .api { fill: #ecfdf5; stroke: #059669; stroke-width: 1.5; }
+    .db { fill: #fffbeb; stroke: #d97706; stroke-width: 1.5; }
+    .ext { fill: #f9fafb; stroke: #9ca3af; stroke-width: 1.2; stroke-dasharray: 4 3; }
+    .arrow { stroke: #374151; stroke-width: 1.6; fill: none; marker-end: url(#ah); }
+    .dep { stroke: #9ca3af; stroke-width: 1.2; fill: none; stroke-dasharray: 5 4; marker-end: url(#ahg); }
+  </style>
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#374151"/></marker>
+    <marker id="ahg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#9ca3af"/></marker>
+  </defs>
+
+  <rect width="1200" height="700" fill="#ffffff"/>
+  <text x="30" y="40" class="t">1. Runtime topology (deployment)</text>
+  <text x="30" y="62" class="st">Where each process runs, which ports are exposed and how requests travel. Same-origin /api in both modes, so the browser never needs CORS.</text>
+
+  <!-- ===================== A. Docker Compose ===================== -->
+  <text x="30" y="100" class="sec">A. FULL STACK — docker compose up --build  →  http://localhost:8080</text>
+
+  <!-- Browser -->
+  <rect x="30" y="160" width="200" height="160" rx="10" class="client"/>
+  <text x="130" y="186" text-anchor="middle" class="h">Browser</text>
+  <text x="45" y="212" class="b">React SPA (static bundle)</text>
+  <text x="45" y="232" class="b">Leaflet map + panels</text>
+  <text x="45" y="256" class="m">fetch('/api/...')</text>
+  <text x="45" y="276" class="s">relative URL: same origin</text>
+  <text x="45" y="294" class="s">as the page → no CORS</text>
+
+  <!-- OSM -->
+  <rect x="30" y="370" width="200" height="66" rx="10" class="ext"/>
+  <text x="130" y="394" text-anchor="middle" class="h">OpenStreetMap tiles</text>
+  <text x="130" y="414" text-anchor="middle" class="s">{s}.tile.openstreetmap.org</text>
+  <text x="130" y="428" text-anchor="middle" class="s">loaded directly by Leaflet</text>
+  <path d="M130,320 L130,368" class="arrow"/>
+  <text x="138" y="350" class="lbl">PNG tiles (HTTPS)</text>
+
+  <!-- compose boundary -->
+  <rect x="280" y="120" width="895" height="380" rx="14" fill="none" stroke="#6b7280" stroke-width="1.4" stroke-dasharray="8 5"/>
+  <text x="298" y="142" class="s">docker-compose.yml — default bridge network, services resolve each other by name (api, mongo)</text>
+
+  <!-- client container -->
+  <rect x="310" y="160" width="250" height="210" rx="10" class="proxy"/>
+  <text x="435" y="186" text-anchor="middle" class="h">client</text>
+  <text x="435" y="204" text-anchor="middle" class="s">client/Dockerfile (multi-stage)</text>
+  <text x="325" y="228" class="b">build: node:24-alpine → npm run build</text>
+  <text x="325" y="248" class="b">run: nginx:1.27-alpine</text>
+  <text x="325" y="268" class="m">host :8080 → container :80</text>
+  <text x="325" y="294" class="m">location /     → dist/</text>
+  <text x="325" y="310" class="s">   try_files $uri /index.html (SPA)</text>
+  <text x="325" y="332" class="m">location /api/ → proxy_pass</text>
+  <text x="325" y="348" class="m">                 http://api:8080</text>
+
+  <!-- api container -->
+  <rect x="610" y="160" width="270" height="210" rx="10" class="api"/>
+  <text x="745" y="186" text-anchor="middle" class="h">api</text>
+  <text x="745" y="204" text-anchor="middle" class="s">server/Dockerfile (multi-stage)</text>
+  <text x="625" y="228" class="b">build: dotnet/sdk:9.0 → dotnet publish</text>
+  <text x="625" y="248" class="b">run: dotnet/aspnet:9.0 (MapApp.Api.dll)</text>
+  <text x="625" y="268" class="m">host :5080 → container :8080</text>
+  <text x="625" y="292" class="b">env (overrides appsettings.json):</text>
+  <text x="625" y="310" class="m">MongoDb__ConnectionString=</text>
+  <text x="625" y="326" class="m">  mongodb://mongo:27017</text>
+  <text x="625" y="344" class="m">MongoDb__DatabaseName=mapapp</text>
+  <text x="625" y="362" class="s">GET /health → Mongo ping (200 / 503)</text>
+
+  <!-- mongo container -->
+  <rect x="930" y="160" width="220" height="210" rx="10" class="db"/>
+  <text x="1040" y="186" text-anchor="middle" class="h">mongo</text>
+  <text x="1040" y="204" text-anchor="middle" class="s">image mongo:8.0</text>
+  <text x="945" y="228" class="m">host :27017 → :27017</text>
+  <text x="945" y="252" class="b">database: mapapp</text>
+  <text x="945" y="272" class="m">• polygons   (2dsphere)</text>
+  <text x="945" y="290" class="m">• mapObjects (2dsphere)</text>
+  <text x="945" y="316" class="b">healthcheck every 5s:</text>
+  <text x="945" y="334" class="m">mongosh ping</text>
+  <text x="945" y="356" class="s">restart: unless-stopped</text>
+
+  <!-- volume -->
+  <path d="M970,420 a70,10 0 0,0 140,0 v44 a70,10 0 0,1 -140,0 z" class="db"/>
+  <ellipse cx="1040" cy="420" rx="70" ry="10" class="db"/>
+  <text x="1040" y="450" text-anchor="middle" class="b">volume mongo-data</text>
+  <text x="1040" y="466" text-anchor="middle" class="s">→ /data/db (persists)</text>
+  <path d="M1040,370 L1040,408" class="arrow"/>
+
+  <!-- request arrows -->
+  <path d="M230,215 L308,215" class="arrow"/>
+  <text x="236" y="207" class="lbl">:8080</text>
+  <path d="M560,240 L608,240" class="arrow"/>
+  <text x="563" y="232" class="lbl">/api/*</text>
+  <path d="M880,240 L928,240" class="arrow"/>
+  <text x="884" y="232" class="lbl">wire</text>
+
+  <!-- depends_on -->
+  <path d="M745,370 C745,440 930,440 1000,374" class="dep"/>
+  <text x="640" y="456" class="s">depends_on: mongo (condition: service_healthy)</text>
+  <path d="M435,370 C435,430 600,430 680,374" class="dep"/>
+  <text x="330" y="440" class="s">depends_on: api (started)</text>
+
+  <text x="298" y="488" class="s">API is also reachable directly on :5080 (curl / Swagger-like tools); MongoIndexInitializer retries index creation, so start order is not critical.</text>
+
+  <!-- ===================== B. Local dev ===================== -->
+  <text x="30" y="545" class="sec">B. LOCAL DEVELOPMENT — hot reload  →  http://localhost:5173</text>
+
+  <rect x="30" y="565" width="200" height="110" rx="10" class="client"/>
+  <text x="130" y="591" text-anchor="middle" class="h">Browser</text>
+  <text x="45" y="617" class="b">same SPA, served by Vite</text>
+  <text x="45" y="637" class="m">fetch('/api/...')</text>
+  <text x="45" y="657" class="s">VITE_API_BASE_URL optional</text>
+
+  <rect x="310" y="565" width="250" height="110" rx="10" class="proxy"/>
+  <text x="435" y="591" text-anchor="middle" class="h">Vite dev server</text>
+  <text x="325" y="615" class="m">npm run dev   :5173</text>
+  <text x="325" y="635" class="b">HMR, TypeScript on the fly</text>
+  <text x="325" y="655" class="m">proxy /api → localhost:5080</text>
+  <text x="325" y="669" class="s">(vite.config.ts, changeOrigin)</text>
+
+  <rect x="610" y="565" width="270" height="110" rx="10" class="api"/>
+  <text x="745" y="591" text-anchor="middle" class="h">ASP.NET Core API</text>
+  <text x="625" y="615" class="m">dotnet run    :5080</text>
+  <text x="625" y="635" class="b">Development: /openapi/v1.json</text>
+  <text x="625" y="655" class="b">CORS allows http://localhost:5173</text>
+  <text x="625" y="669" class="s">(only needed without the proxy)</text>
+
+  <rect x="930" y="565" width="220" height="110" rx="10" class="db"/>
+  <text x="1040" y="591" text-anchor="middle" class="h">MongoDB in Docker</text>
+  <text x="945" y="615" class="m">docker compose up -d mongo</text>
+  <text x="945" y="635" class="m">localhost:27017</text>
+  <text x="945" y="655" class="s">(not installed on the host)</text>
+
+  <path d="M230,620 L308,620" class="arrow"/>
+  <text x="236" y="612" class="lbl">:5173</text>
+  <path d="M560,620 L608,620" class="arrow"/>
+  <text x="563" y="612" class="lbl">/api/*</text>
+  <path d="M880,620 L928,620" class="arrow"/>
+  <text x="884" y="612" class="lbl">wire</text>
+</svg>
