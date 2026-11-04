@@ -11,6 +11,23 @@ internal static class RequestRules
     public const int MaxNameLength = 100;
     public const int MaxClientIdLength = 100;
 
+    /// <summary>
+    /// Limit on all polygon positions in one request. The self-intersection check is O(n²) per polygon, so
+    /// 500 polygons × 1000 vertices would be ~250 million segment tests; this keeps one request cheap.
+    /// </summary>
+    public const int MaxBatchVertices = 10_000;
+
+    /// <summary>Rejects a batch whose polygons have too many positions in total, before any expensive check.</summary>
+    public static void ValidateTotalVertices(IEnumerable<int> positionCounts, ValidationErrors errors)
+    {
+        if (positionCounts.Sum() > MaxBatchVertices)
+        {
+            errors.Add("$", $"At most {MaxBatchVertices} vertices can be saved in one request.");
+        }
+
+        errors.ThrowIfAny();
+    }
+
     /// <summary>Validates that a batch is present, non-empty and not too large.</summary>
     public static void ValidateBatch<T>(IReadOnlyList<T>? items, ValidationErrors errors)
     {

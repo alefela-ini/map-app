@@ -15,6 +15,33 @@ public sealed class GeometryValidatorTests
         return (GeometryValidator.ValidatePolygon(geometry, "geometry", errors), errors);
     }
 
+    /// <summary>A regular n-gon (always simple), optionally closed.</summary>
+    private static PolygonGeometry RegularPolygon(int vertices, bool closed)
+    {
+        var ring = Enumerable.Range(0, vertices)
+            .Select(i => P(Math.Cos(2 * Math.PI * i / vertices), Math.Sin(2 * Math.PI * i / vertices)))
+            .ToList();
+        if (closed)
+        {
+            ring.Add(ring[0]);
+        }
+
+        return Polygon([.. ring]);
+    }
+
+    [Theory]
+    [InlineData(1000, false, true)]
+    [InlineData(1000, true, true)]   // 1001 positions, but the last one only closes the ring
+    [InlineData(1001, false, false)] // used to pass: 1001 positions did not exceed the "+1" guard
+    [InlineData(1001, true, false)]
+    public void Vertex_limit_counts_distinct_vertices(int vertices, bool closed, bool accepted)
+    {
+        var (ring, errors) = Validate(RegularPolygon(vertices, closed));
+
+        Assert.Equal(accepted, !errors.HasErrors);
+        Assert.Equal(accepted, ring is not null);
+    }
+
     [Fact]
     public void Open_ring_is_closed_and_oriented_counter_clockwise()
     {

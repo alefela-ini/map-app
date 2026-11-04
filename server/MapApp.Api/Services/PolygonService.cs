@@ -45,6 +45,8 @@ public sealed class PolygonService(IRepository<PolygonDocument> repository, Time
     {
         var errors = new ValidationErrors();
         RequestRules.ValidateBatch(requests, errors);
+        RequestRules.ValidateTotalVertices(
+            requests!.Select(r => r.Geometry?.Coordinates?.Sum(ring => ring?.Length ?? 0) ?? 0), errors);
         RequestRules.ValidateClientIds(requests!.Select(r => r.ClientId), errors);
 
         var now = timeProvider.GetUtcNow().UtcDateTime;

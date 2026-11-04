@@ -145,8 +145,12 @@ client/
 - **Geometry validation** mirrors what the `2dsphere` index accepts: valid ranges, ≥ 3 distinct vertices, no crossing
   or touching edges, non-zero area. Rings may be sent open or closed; the server closes them and orients them
   counter-clockwise (RFC 7946), keeping the first vertex. The client runs the same check before closing a polygon.
-- **Startup resilience.** Indexes are created by a background service that retries until MongoDB is reachable;
-  database outages return `503` instead of hanging (5 s server-selection timeout).
+  Limits: at most 1000 distinct vertices per polygon and 10 000 positions per request (the self-intersection check
+  is O(n²), so one request stays cheap).
+- **Indexes before traffic.** The `2dsphere` and `clientId` indexes are created during startup, before the server
+  starts listening. If MongoDB is not reachable yet, startup retries for up to a minute; invalid stored data, a
+  conflicting index or wrong credentials stop the startup with a clear message. Later database outages return
+  `503` instead of hanging (5 s server-selection timeout).
 
 ## Known limitations
 

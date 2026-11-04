@@ -67,6 +67,8 @@ public static class GeometryValidator
         }
 
         var rawRing = rings[0];
+        // Cheap early guard before any work (+1: a closed ring repeats its first vertex).
+        // The exact limit on distinct vertices is checked below, once the ring is known to be open.
         if (rawRing.Length > MaxPolygonVertices + 1)
         {
             errors.Add(coordinatesPath, $"Polygon must have at most {MaxPolygonVertices} vertices.");
@@ -105,6 +107,13 @@ public static class GeometryValidator
         if (ring.Count < 3)
         {
             errors.Add(coordinatesPath, "Polygon must have at least 3 distinct vertices.");
+            return null;
+        }
+
+        // An OPEN ring of MaxPolygonVertices + 1 positions passes the early guard, so check the real count here.
+        if (ring.Count > MaxPolygonVertices)
+        {
+            errors.Add(coordinatesPath, $"Polygon must have at most {MaxPolygonVertices} vertices.");
             return null;
         }
 

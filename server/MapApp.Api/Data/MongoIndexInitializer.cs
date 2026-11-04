@@ -61,6 +61,12 @@ public sealed class MongoIndexInitializer(
                     $"MongoDB 2dsphere indexes cannot be created ({ex.CodeName}). " +
                     "Fix the stored data or the conflicting index, then restart the API.", ex);
             }
+            catch (MongoAuthenticationException ex)
+            {
+                // Wrong credentials do not fix themselves: fail now instead of retrying for a minute.
+                throw new InvalidOperationException(
+                    "Cannot authenticate to MongoDB. Check the credentials in MongoDb:ConnectionString.", ex);
+            }
             catch (Exception ex) when (ex is not OperationCanceledException && elapsed.Elapsed + delay < GiveUpAfter)
             {
                 // Transient: MongoDB not reachable yet, timeout, network. Once GiveUpAfter is reached the

@@ -75,6 +75,20 @@ public sealed class ServiceTests
     }
 
     [Fact]
+    public async Task Batch_with_too_many_vertices_in_total_is_rejected_before_validation()
+    {
+        var service = new PolygonService(new InMemoryRepository<PolygonDocument>(), TimeProvider.System);
+        // 11 polygons × 1000 positions = 11 000 > 10 000; each one alone would be valid size-wise.
+        var big = new PolygonGeometry(GeoJsonTypes.Polygon, [Enumerable.Range(0, 1000).Select(i => new double[] { i * 1e-4, 0 }).ToArray()]);
+
+        var error = await Assert.ThrowsAsync<RequestValidationException>(() => service.CreateManyAsync(
+            Enumerable.Range(0, 11).Select(i => new CreatePolygonRequest($"P{i}", big)).ToList(),
+            CancellationToken.None));
+
+        Assert.True(error.Errors.ContainsKey("$"));
+    }
+
+    [Fact]
     public async Task Too_long_name_is_rejected()
     {
         var service = new PolygonService(new InMemoryRepository<PolygonDocument>(), TimeProvider.System);
