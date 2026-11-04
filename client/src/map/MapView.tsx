@@ -116,6 +116,7 @@ function PlacementLayer({ onPlace }: { onPlace: (point: LatLng) => void }) {
   const map = useMap();
 
   useEffect(() => {
+    map.stop(); // Place the object where the user aims, not on a map still moving after a flyTo.
     map.getContainer().classList.add('map--placing');
     return () => map.getContainer().classList.remove('map--placing');
   }, [map]);

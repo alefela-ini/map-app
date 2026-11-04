@@ -25,6 +25,8 @@ export function DrawingLayer({ vertices, onAddVertex, onClose }: DrawingLayerPro
 
   // Double-click would zoom and also add two vertices; disable it while drawing.
   useEffect(() => {
+    // A running flyTo (after a Map Data row click) would move the first vertex away from under the cursor.
+    map.stop();
     map.doubleClickZoom.disable();
     map.getContainer().classList.add('map--drawing');
     return () => {
