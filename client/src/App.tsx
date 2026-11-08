@@ -232,6 +232,8 @@ export default function App() {
   }, [hasUnsavedWork]);
 
   // Buttons stay disabled until the first load finishes: draft names ("Polygon 3") are derived from the loaded list.
+  // Correctness also relies on it: Save returns only the saved items, so a Save must never overtake the initial GET
+  // (its late list would be ignored as stale by responseOrder and the older items would be missing until a reload).
   const polygonsBusy = polygons.busy || !polygons.loaded;
   const objectsBusy = objects.busy || !objects.loaded;
 

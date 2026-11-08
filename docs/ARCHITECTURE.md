@@ -4,6 +4,132 @@ This document explains how the Map Application is put together: where each part 
 depend on each other, and what happens to the data on its way from a map click to MongoDB and back.
 Every box in the diagrams is a real file or folder in the repository.
 
+## Architecture at a glance
+
+The system is a **modular monolith**, not a set of domain microservices. It has three deployable runtime
+components: a React SPA served by nginx, one ASP.NET Core API, and MongoDB. Polygons and map objects are
+separate REST resources and application modules inside the same API process. At the expected scale (tens of
+polygons and markers, local deployment), splitting them into independently deployed services would add network,
+consistency, and operational costs without an independent scaling need.
+
+```mermaid
+flowchart LR
+    User[User]
+
+    subgraph Browser[Browser - React SPA]
+        UI[Panels and Leaflet map]
+        State["Collection state<br/>saved + drafts + selection"]
+        RestClient[REST client]
+        EventClient[EventSource client]
+
+        UI --> State
+        State --> RestClient
+        EventClient --> State
+    end
+
+    subgraph ClientContainer[client container]
+        Nginx["nginx<br/>SPA files + /api proxy"]
+    end
+
+    subgraph ApiContainer[api container - ASP.NET Core modular monolith]
+        Controllers[Polygon and Object controllers]
+        Services[Application services]
+        Rules[Validation and GeoJSON mapping]
+        Repository[MongoRepository]
+        Notifier[ChangeNotifier]
+        Events["SSE endpoint<br/>GET /api/events"]
+        Indexes["MongoIndexInitializer<br/>startup gate"]
+
+        Controllers --> Services
+        Services --> Rules
+        Services --> Repository
+        Services --> Notifier
+        Notifier --> Events
+    end
+
+    subgraph MongoDB[MongoDB]
+        PolygonCollection[(polygons)]
+        ObjectCollection[(mapObjects)]
+        MongoIndexes[2dsphere and unique clientId indexes]
+    end
+
+    Tiles[OpenStreetMap tile servers]
+
+    User -->|Open application| Nginx
+    Nginx -->|HTML / JS / CSS| UI
+    RestClient -->|GET / POST / DELETE| Nginx
+    EventClient -->|long-lived GET /api/events| Nginx
+    Nginx --> Controllers
+    Nginx --> Events
+    Repository --> PolygonCollection
+    Repository --> ObjectCollection
+    Indexes --> MongoIndexes
+    UI -->|map tiles| Tiles
+```
+
+### Central responsibilities
+
+| Element | Responsibility |
+|---------|----------------|
+| React composition and views | Map interaction, panels, drawing and placement modes, selection and user feedback. |
+| `useEditableCollection` | Initial synchronization, saved items, browser-only drafts, Save/Delete operations and stale-response protection. |
+| REST controllers | HTTP boundary and status-code mapping; no business or persistence logic. |
+| Application services | Validate a complete batch, map GeoJSON, persist it, return the saved batch and announce a committed change. |
+| `MongoRepository` | MongoDB reads, idempotent writes keyed by `clientId`, and deletes. |
+| MongoDB | Source of truth for saved polygons and objects; `2dsphere` indexes validate and index their geometries. |
+| SSE change stream | Tells connected browsers which collection changed; clients then reload that collection through the REST API. |
+| `MongoIndexInitializer` | Creates required indexes before the API begins accepting traffic. |
+
+### Main runtime flows
+
+**Initial synchronization**
+
+```mermaid
+sequenceDiagram
+    participant Browser
+    participant API
+    participant MongoDB
+
+    Browser->>API: GET /api/polygons
+    Browser->>API: GET /api/objects
+    Browser->>API: GET /api/events (SSE)
+    API->>MongoDB: Read both collections
+    MongoDB-->>API: Saved documents
+    API-->>Browser: GeoJSON DTOs
+    Browser->>Browser: Render map and Map Data table
+```
+
+**Save and multi-user synchronization**
+
+```mermaid
+sequenceDiagram
+    actor A as User A
+    participant ClientA as React client A
+    participant API
+    participant MongoDB
+    participant Events as SSE stream
+    participant ClientB as React client B
+
+    A->>ClientA: Save drafts
+    ClientA->>API: POST batch with clientId
+    API->>API: Validate complete batch
+    API->>MongoDB: Idempotent upsert
+    MongoDB-->>API: Stored documents
+    API->>Events: Publish collection changed
+    API-->>ClientA: 200 - saved batch only
+    ClientA->>ClientA: Merge by id and remove saved drafts
+    Events-->>ClientB: changed: polygons or objects
+    ClientB->>API: GET changed collection
+    API->>MongoDB: Read current collection
+    MongoDB-->>API: Current documents
+    API-->>ClientB: Current GeoJSON DTOs
+    ClientB->>ClientB: Replace saved collection
+```
+
+**Delete** follows the same consistency rule: the initiating client sends `DELETE`, the service removes the
+document, and only after a successful database change does it notify connected clients to reload the affected
+collection.
+
 | # | Diagram | Answers the question |
 |---|---------|----------------------|
 | 1 | [Runtime topology](#1-runtime-topology) | What runs where, on which ports, and how does a request reach the database? |
