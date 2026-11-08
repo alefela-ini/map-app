@@ -486,3 +486,6 @@ $RECYCLE.BIN/
 # Node / Vite
 node_modules/
 dist/
+
+# Personal working notes (local only, not part of the project)
+CLAUDE.md
