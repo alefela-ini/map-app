@@ -35,6 +35,8 @@ interface MapViewProps {
   dataLoaded: boolean;
   onSelectPolygon: (id: string) => void;
   onSelectObject: (id: string) => void;
+  /** A click on empty map outside drawing / placing. */
+  onClearSelection: () => void;
   onAddVertex: (point: LatLng) => void;
   onClosePolygon: () => void;
   onPlaceObject: (point: LatLng) => void;
@@ -105,10 +107,21 @@ export function MapView(props: MapViewProps) {
 
       {mode.kind === 'placeObject' && <PlacementLayer onPlace={props.onPlaceObject} />}
 
+      {mode.kind === 'idle' && <EmptyClickLayer onClick={props.onClearSelection} />}
+
       <FocusController focus={focus} />
       <InitialFit ready={props.dataLoaded} polygons={polygons} objects={objects} />
     </MapContainer>
   );
+}
+
+/**
+ * Outside drawing / placing: a click on empty map clears the selection. Clicks on shapes never get here:
+ * polygons stop propagation and markers do not bubble to the map; dragging the map is not a click.
+ */
+function EmptyClickLayer({ onClick }: { onClick: () => void }) {
+  useMapEvents({ click: () => onClick() });
+  return null;
 }
 
 /** Object placement mode: the next click on the map places the object. */

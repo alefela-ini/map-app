@@ -12,6 +12,8 @@ interface PolygonPanelProps {
   error: string | null;
   onAdd: () => void;
   onCancelDrawing: () => void;
+  /** Throws away the unsaved polygons. */
+  onDiscardDrafts: () => void;
   onSave: () => void;
   onDeleteSelected: () => void;
   onDeleteAll: () => void;
@@ -31,20 +33,47 @@ export function PolygonPanel(props: PolygonPanelProps) {
             Cancel
           </button>
         ) : (
-          <button type="button" className="primary" onClick={props.onAdd} disabled={busy}>
+          <button
+            type="button"
+            className="primary"
+            onClick={props.onAdd}
+            disabled={busy || selected !== null}
+            title={selected ? 'Clear the selection first: Esc or click on empty map' : undefined}
+          >
             Add
           </button>
         )}
-        <button type="button" onClick={props.onSave} disabled={busy || draftCount === 0}>
-          Save{draftCount > 0 ? ` (${draftCount})` : ''}
-        </button>
-        <button type="button" className="danger" onClick={props.onDeleteSelected} disabled={busy || !selected}>
-          Delete
-        </button>
-        <button type="button" className="danger" onClick={props.onDeleteAll} disabled={busy || !hasAny}>
-          Delete all
-        </button>
+        {/* Deleting is its own state: hidden while drawing and while there are unsaved polygons (Save / Cancel). */}
+        {!drawing && draftCount === 0 && (
+          <>
+            <button
+              type="button"
+              className="danger"
+              onClick={props.onDeleteSelected}
+              disabled={busy || !selected}
+              title={selected ? `Delete ${selected.name}` : 'Select a polygon on the map or in the table first'}
+            >
+              Delete
+            </button>
+            <button type="button" className="danger" onClick={props.onDeleteAll} disabled={busy || !hasAny}>
+              Delete all
+            </button>
+          </>
+        )}
       </div>
+
+      {/* Second row, as on the mockup: Save / Cancel, only when there is something unsaved.
+          Cancel simply throws the unsaved items away. */}
+      {!drawing && draftCount > 0 && (
+        <div className="toolbar">
+          <button type="button" onClick={props.onSave} disabled={busy}>
+            Save ({draftCount})
+          </button>
+          <button type="button" onClick={props.onDiscardDrafts} disabled={busy}>
+            Cancel
+          </button>
+        </div>
+      )}
 
       {drawing && (
         <Message kind="info">
@@ -58,7 +87,6 @@ export function PolygonPanel(props: PolygonPanelProps) {
       {!drawing && selected && (
         <Message kind="info">
           Selected: <strong>{selected.name}</strong>
-          {selected.saved ? '' : ' (unsaved)'}
         </Message>
       )}
       {props.error && (

@@ -181,6 +181,17 @@ button.danger:hover:not(:disabled) {
   color: var(--danger-hover);
 }
 
+/* Disabled buttons look clearly unavailable: plain grey for every variant. With only a lower opacity a disabled
+   Delete stayed pinkish red and looked clickable. */
+button:disabled,
+button.primary:disabled,
+button.danger:disabled {
+  opacity: 1;
+  background: #f3f4f6;
+  border-color: var(--border);
+  color: #9ca3af;
+}
+
 button:focus-visible,
 input:focus-visible,
 tr:focus-visible {
@@ -358,4 +369,55 @@ kbd {
 
 .data-table__vertex td:first-child {
   padding-left: 50px;
+}
+
+/* Objects › Add: a small menu to choose what to add (Marker / Jeep). */
+.add-menu {
+  position: relative;
+}
+
+.add-menu__list {
+  position: absolute;
+  z-index: 1000; /* above Leaflet panes and controls */
+  top: calc(100% + 4px);
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 150px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
+}
+
+.add-menu__list [role='menuitem'] {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  text-align: left;
+}
+
+.add-menu__list [role='menuitem']:hover,
+.add-menu__list [role='menuitem']:focus-visible {
+  background: var(--bg);
+}
+
+.add-menu__icon {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 30px;
+  height: 24px;
+}
+
+.add-menu__jeep svg {
+  display: block;
+  width: 30px;
+  height: 20px;
 }

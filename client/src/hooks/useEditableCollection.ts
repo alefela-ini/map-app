@@ -89,9 +89,9 @@ export function useEditableCollection<TItem extends EditableItem, TDto, TRequest
     }
   }, []);
 
+  /** Adds an unsaved item. It is NOT selected: selecting is for saved items (Delete); drafts go via Save / Cancel. */
   const addDraft = useCallback((item: TItem) => {
     setDrafts((current) => [...current, item]);
-    setSelectedId(item.id);
   }, []);
 
   const updateDraft = useCallback((id: string, patch: Partial<TItem>) => {
@@ -124,6 +124,13 @@ export function useEditableCollection<TItem extends EditableItem, TDto, TRequest
   const refresh = useCallback(() => {
     reload().catch(() => {});
   }, [reload]);
+
+  /** Throws away all unsaved drafts (the panel's Cancel). Nothing is sent to the server. */
+  const discardDrafts = useCallback(() => {
+    const draftIds = new Set(drafts.map((d) => d.id));
+    setDrafts([]);
+    setSelectedId((current) => (current !== null && draftIds.has(current) ? null : current));
+  }, [drafts]);
 
   /** Deletes the selected item: drafts locally, saved items on the server. */
   const deleteSelected = useCallback(async () => {
@@ -174,6 +181,7 @@ export function useEditableCollection<TItem extends EditableItem, TDto, TRequest
     addDraft,
     updateDraft,
     saveDrafts,
+    discardDrafts,
     deleteSelected,
     deleteAll,
     refresh,

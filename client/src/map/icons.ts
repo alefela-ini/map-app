@@ -10,7 +10,11 @@ import type { ObjectSymbol } from '../types';
 
 export type IconState = 'saved' | 'draft' | 'selected';
 
-const JEEP_SVG = `
+/** Image of the standard pin, also used as a preview in the Objects panel's Add menu. */
+export { markerIconUrl as MARKER_ICON_URL };
+
+/** The Jeep symbol (static markup), drawn on the map and as a preview in the Add menu. */
+export const JEEP_SVG = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 32" width="44" height="30" aria-hidden="true">
   <path d="M4 20 L6 13 L14 13 L18 6 L32 6 L34 13 L43 14 L45 20 Z" fill="#4d6b2f" stroke="#26361a" stroke-width="1.5" stroke-linejoin="round"/>
   <path d="M19.5 8 L30.5 8 L31.8 13 L16.7 13 Z" fill="#cfe3f5" stroke="#26361a" stroke-width="1"/>

@@ -53,10 +53,44 @@ export default function App() {
   const [mode, setMode] = useState<InteractionMode>(IDLE);
   const [drawingVertices, setDrawingVertices] = useState<LatLng[]>([]);
   const [drawingProblem, setDrawingProblem] = useState<string | null>(null);
-  const [symbol, setSymbol] = useState<ObjectSymbol>('marker');
   const [focus, setFocus] = useState<FocusRequest | null>(null);
 
   const focusOn = useCallback((points: LatLng[]) => setFocus((f) => ({ points, seq: (f?.seq ?? 0) + 1 })), []);
+
+  // ---- Selection: one item at a time, across polygons and objects ----------
+  // Each panel's Delete acts on its own selection; allowing a polygon AND an object to be selected at once
+  // made it unclear what would be deleted. A click on empty map or Esc clears the selection.
+
+  const { select: setPolygonSelection } = polygons;
+  const { select: setObjectSelection } = objects;
+
+  // Only SAVED items can be selected (selection exists for Delete), and only while that panel has no unsaved
+  // drafts: first Save or Cancel them. Otherwise "adding" and "deleting" states would mix in one panel.
+  const polygonsPending = polygons.drafts.length > 0;
+  const objectsPending = objects.drafts.length > 0;
+
+  const selectPolygon = useCallback(
+    (id: string) => {
+      if (polygonsPending) return;
+      setPolygonSelection(id);
+      setObjectSelection(null);
+    },
+    [polygonsPending, setPolygonSelection, setObjectSelection],
+  );
+
+  const selectObject = useCallback(
+    (id: string) => {
+      if (objectsPending) return;
+      setObjectSelection(id);
+      setPolygonSelection(null);
+    },
+    [objectsPending, setPolygonSelection, setObjectSelection],
+  );
+
+  const clearSelection = useCallback(() => {
+    setPolygonSelection(null);
+    setObjectSelection(null);
+  }, [setPolygonSelection, setObjectSelection]);
 
   // ---- Mode handling -------------------------------------------------------
 
@@ -66,13 +100,16 @@ export default function App() {
     setDrawingProblem(null);
   }, []);
 
+  // Adding and selecting are separate states: starting to add clears any selection.
   const startDrawing = () => {
     cancelMode();
+    clearSelection();
     setMode({ kind: 'drawPolygon' });
   };
 
-  const startPlacing = () => {
+  const startPlacing = (symbol: ObjectSymbol) => {
     cancelMode();
+    clearSelection();
     setMode({ kind: 'placeObject', symbol });
   };
 
@@ -93,6 +130,16 @@ export default function App() {
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [mode.kind, cancelMode]);
+
+  // Esc outside drawing / placing clears the selection.
+  useEffect(() => {
+    if (mode.kind !== 'idle') return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') clearSelection();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [mode.kind, clearSelection]);
 
   // ---- Polygon drawing -----------------------------------------------------
 
@@ -130,7 +177,7 @@ export default function App() {
       position,
       saved: false,
     });
-    cancelMode();
+    cancelMode(); // one object per Add: further map clicks do nothing
   };
 
   // ---- Delete with confirmation ------------------------------------------
@@ -159,18 +206,18 @@ export default function App() {
 
   const onRowClick = (row: MapDataRow) => {
     if (row.kind === 'polygon') {
-      polygons.select(row.itemId);
+      selectPolygon(row.itemId);
       const polygon = polygons.saved.find((p) => p.id === row.itemId);
       if (polygon) focusOn(polygon.vertices);
     } else {
-      objects.select(row.itemId);
+      selectObject(row.itemId);
       focusOn([{ lat: row.lat, lng: row.lng }]);
     }
   };
 
   /** A vertex row of an expanded polygon: select the polygon and fly to that vertex. */
   const onVertexClick = (polygonId: string, vertex: LatLng) => {
-    polygons.select(polygonId);
+    selectPolygon(polygonId);
     focusOn([vertex]);
   };
 
@@ -200,8 +247,9 @@ export default function App() {
           drawingVertices={drawingVertices}
           focus={focus}
           dataLoaded={polygons.loaded && objects.loaded}
-          onSelectPolygon={polygons.select}
-          onSelectObject={objects.select}
+          onSelectPolygon={selectPolygon}
+          onSelectObject={selectObject}
+          onClearSelection={clearSelection}
           onAddVertex={addVertex}
           onClosePolygon={closePolygon}
           onPlaceObject={placeObject}
@@ -222,23 +270,23 @@ export default function App() {
           onAdd={startDrawing}
           onCancelDrawing={cancelMode}
           onSave={() => void polygons.saveDrafts()}
+          onDiscardDrafts={polygons.discardDrafts}
           onDeleteSelected={deleteSelectedPolygon}
           onDeleteAll={deleteAllPolygons}
           onDismissError={polygons.clearError}
         />
 
         <ObjectsPanel
-          symbol={symbol}
-          placing={mode.kind === 'placeObject'}
+          placingSymbol={mode.kind === 'placeObject' ? mode.symbol : null}
           savedCount={objects.saved.length}
           draftCount={objects.drafts.length}
           selected={objects.selected}
           busy={objectsBusy}
           error={objects.error}
-          onSymbolChange={setSymbol}
           onAdd={startPlacing}
           onCancelPlacing={cancelMode}
           onSave={() => void objects.saveDrafts()}
+          onDiscardDrafts={objects.discardDrafts}
           onDeleteSelected={deleteSelectedObject}
           onDismissError={objects.clearError}
         />

@@ -48,19 +48,34 @@ cd client && npm run lint
 
 The screen has four panels: **Map** (left), **Polygon**, **Objects** and **Map Data** (right).
 
+Each panel is always in exactly one state, so adding and deleting never mix:
+
+| State | Buttons |
+|---|---|
+| Adding (drawing / waiting for the click) | **Cancel** only |
+| Unsaved items (after adding) | **Add** (add more to the list); second row **Save (n)** / **Cancel** (throw them away). No Delete |
+| A saved item is selected | **Delete** enabled, **Add** disabled. `Esc` or a click on empty map clears the selection |
+| Nothing going on | **Add**; **Delete** disabled until something is selected |
+
+New items are not selected, and a panel's saved items cannot be selected while it has unsaved ones (Save or Cancel
+first). Only one item is selected at a time.
+
 **Polygon**
 - **Add** – enters drawing mode. Click the map to add vertices; click the first vertex again to close the polygon
   (needs at least 3 vertices). `Backspace` removes the last vertex, `Esc` cancels.
   Self-intersecting shapes cannot be closed.
-- **Save** – sends all unsaved polygons to the server (`POST`). The server responds with the saved polygons,
-  which are added to the map and the Map Data table.
-- **Delete** – deletes the selected polygon (click it on the map or in the table).
+- **Save** / **Cancel** – appear only when there are unsaved polygons. Save sends them to the server (`POST`); the
+  server responds with the saved polygons, which are added to the map and the Map Data table. Cancel simply throws
+  the unsaved polygons away.
+- **Delete** – deletes the selected polygon (click it on the map or in the table). Only one item is selected at a
+  time; a click on empty map or `Esc` clears the selection, and Delete is disabled while nothing is selected.
   **Delete all** – deletes every polygon from the map and the database. Both ask for confirmation.
 
 **Objects**
-- Choose the symbol (**Marker** or **Jeep**) and click **Add**, then click the map to place it.
-  Unsaved objects can be dragged.
-- **Save** – sends the list of unsaved objects (`POST`); the table is refreshed from the response.
+- **Add** opens a small menu: choose **Marker** or **Jeep**, then click the map once to place it. One object per Add:
+  further clicks on the map do nothing. While waiting for that click, only **Cancel** is shown.
+- **Save** / **Cancel** – appear only when there are unsaved objects. Save sends the list (`POST`) and the table is
+  updated from the response; Cancel simply throws the unsaved objects away. Unsaved objects can be dragged.
 - **Delete** – deletes the selected object (click it on the map or in the table).
 
 **Map Data** – `Object / Lat / Lon` for everything stored in the database: one row per object and one row per polygon
