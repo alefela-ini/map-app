@@ -59,11 +59,12 @@ public sealed class MongoIntegrationTests(MongoContainerFixture mongo) : IClassF
                "geometry": { "type": "Polygon", "coordinates": [[[34.78,32.08],[34.80,32.08],[34.80,32.06]]] } }]
             """;
 
-        Assert.Equal(HttpStatusCode.OK, (await client.PostAsync("/api/polygons", Json(body))).StatusCode);
+        var first = await (await client.PostAsync("/api/polygons", Json(body))).Content.ReadFromJsonAsync<JsonElement>();
         var retry = await client.PostAsync("/api/polygons", Json(body)); // response "lost", user retries
         Assert.Equal(HttpStatusCode.OK, retry.StatusCode);
 
-        Assert.Single((await retry.Content.ReadFromJsonAsync<JsonElement>()).EnumerateArray());
+        var second = Assert.Single((await retry.Content.ReadFromJsonAsync<JsonElement>()).EnumerateArray());
+        Assert.Equal(first[0].GetProperty("id").GetString(), second.GetProperty("id").GetString()); // the stored one
         var stored = await new MongoClient(mongo.ConnectionString).GetDatabase(database)
             .GetCollection<BsonDocument>("polygons").CountDocumentsAsync(FilterDefinition<BsonDocument>.Empty);
         Assert.Equal(1, stored);

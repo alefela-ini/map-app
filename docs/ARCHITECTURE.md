@@ -60,7 +60,7 @@ Every box in the diagrams is a real file or folder in the repository.
 |-------|-------|----------------|
 | Host | `Program.cs`, `Infrastructure/ServiceCollectionExtensions.cs` | DI registration, middleware order, JSON options (enums as camelCase strings, integers rejected), ProblemDetails, CORS, OpenAPI in Development, `/health/live` and `/health/ready`. |
 | HTTP | `Controllers/*`, `Contracts/*` | Thin controllers that only map results to 200, 204 or 404. The DTOs are plain GeoJSON. |
-| Application | `Services/*` | `CreateManyAsync` validates the whole batch first, then inserts it, then returns the full list. `GeoJsonMapper` is the only server code that converts between the DTOs and the MongoDB GeoJSON types. |
+| Application | `Services/*` | `CreateManyAsync` validates the whole batch first, then inserts it, then returns the saved items and notifies connected clients. `GeoJsonMapper` is the only server code that converts between the DTOs and the MongoDB GeoJSON types. |
 | Domain rules | `Validation/*` | `GeometryValidator` is static and pure: it checks coordinate ranges, dedupes vertices, accepts open or closed rings, rejects self-intersections and zero area, and turns the ring counter-clockwise. Errors are collected per path and thrown as one `RequestValidationException`. |
 | Errors | `Infrastructure/ApiExceptionHandler.cs` | Validation errors and MongoDB error 16755 ("can't extract geo keys") become 400. A timeout or connection failure becomes 503. Anything else becomes a 500. |
 | Persistence | `Data/*`, `Models/*` | `IRepository<T>` is implemented by `MongoRepository<T>`. When an insert of several documents fails part-way, the repository deletes the ones already written (compensating rollback). BSON conventions: camelCase names and enums stored as strings. |
@@ -86,11 +86,13 @@ Things to notice:
 3. **Retrying is idempotent.** Each item carries `clientId` (the draft's random id). The repository upserts by
    it with `$setOnInsert`, backed by a unique partial index, so repeating a Save whose response was lost does
    not create duplicates.
-4. **The server is the source of truth.** Save returns the full list, not only the new items, and the client
-   replaces its `saved` array with it. Delete calls `reload()`. The client never patches its local copy by
-   hand.
+4. **The server is the source of truth.** Save returns only the saved items (the reviewer confirmed this
+   reading of "return updated data"); the client merges them into its `saved` list by id. Delete calls
+   `reload()`.
 5. **Drafts created during the request are kept.** The hook sends a snapshot of the drafts and, on success,
    removes only the drafts that were in that snapshot.
+6. **Other users see it live.** The service publishes "polygons changed" after the write; every open tab gets
+   it over Server-Sent Events (`GET /api/events`) and reloads the collection. See "Live updates" below.
 
 Objects follow the same path: `ObjectsPanel` → objects hook → `POST /api/objects` → `MapObjectService` →
 `GeometryValidator.ValidatePoint`.
@@ -126,6 +128,23 @@ Objects follow the same path: `ObjectsPanel` → objects hook → `POST /api/obj
   Data table shows saved items only, and the panel header shows how many items are unsaved.
 
 ---
+
+## Live updates
+
+- **Why SSE.** Updates flow one way, server to browser. Polling adds delay and needless requests; WebSocket or
+  SignalR add a two-way channel nobody needs here. `EventSource` is built into the browser and reconnects by itself.
+- **Notify, then reload.** An event says only which collection changed; the client reloads it with the usual GET,
+  which already handles out-of-order responses (`responseOrder`). Every time the stream opens, the first time
+  included, the client reloads everything: a change made between the initial GET and the subscription, or while
+  disconnected, was announced to nobody listening. (Reloading only on REconnect lost such a change; reproduced in
+  Chrome before the fix.)
+- **Server side** (`Realtime/`): an in-process `ChangeNotifier` that keeps, per subscriber, only the SET of
+  collections changed since the last event. Repeated changes merge, memory stays bounded for a slow client, and no
+  collection can be dropped (a bounded drop-oldest queue could lose the last "objects" behind many "polygons"), a heartbeat comment every 15 s (nginx closes
+  idle upstream reads after 60 s), `X-Accel-Buffering: no` so nginx forwards events at once, and the stream ends on
+  `ApplicationStopping` so shutdown is not held up for Docker's 10 s timeout.
+- **Limit.** Only clients of the API instance that handled the write are notified; several instances would need
+  Redis pub/sub or MongoDB change streams.
 
 ## Known limitations
 

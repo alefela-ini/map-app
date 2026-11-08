@@ -111,7 +111,7 @@
   <text x="52" y="671" class="h">hooks/useEditableCollection.ts — generic, one instance per resource (polygons, objects)</text>
   <text x="52" y="692" class="m">state  saved (server truth) · drafts (browser only) · selectedId · busy · error · loaded</text>
   <text x="52" y="710" class="m">ops    addDraft · updateDraft · reload (GET on mount, AbortController)</text>
-  <text x="52" y="726" class="m">       saveDrafts → POST drafts, replace saved with the returned full list</text>
+  <text x="52" y="726" class="m">       saveDrafts → POST drafts, merge the saved items by id</text>
   <text x="52" y="742" class="m">       deleteSelected (draft: local only | saved: DELETE + reload) · deleteAll</text>
   <text x="52" y="762" class="s">items = [...saved, ...drafts] → map;  saved → table;  errors → describeError(e, draftNames)</text>
 
@@ -174,7 +174,7 @@
   <rect x="780" y="118" width="620" height="104" rx="8" class="sv"/>
   <text x="792" y="139" class="h">Program.cs — host, DI and middleware pipeline (order matters)</text>
   <text x="792" y="160" class="m">UseExceptionHandler → UseStatusCodePages → MapOpenApi (dev only)</text>
-  <text x="792" y="176" class="m">→ UseCors("ClientPolicy": GET/POST/DELETE) → MapControllers · /health/live, /health/ready</text>
+  <text x="792" y="176" class="m">→ UseCors("ClientPolicy": GET/POST/DELETE) → MapControllers · /api/events (SSE) · /health/*</text>
   <text x="792" y="196" class="m">JSON: JsonStringEnumConverter(camelCase, allowIntegerValues: false)</text>
   <text x="792" y="213" class="s">AddProblemDetails · AddExceptionHandler&lt;ApiExceptionHandler&gt; · AddMongoPersistence · AddMapServices</text>
   <path d="M930,222 L930,246" class="a"/>
@@ -211,7 +211,7 @@
   <text x="792" y="531" class="m">            + GeometryValidator → errors["[i].…"]</text>
   <text x="792" y="548" class="m">3 errors.ThrowIfAny()   ← nothing written yet</text>
   <text x="792" y="565" class="m">4 repository.InsertManyAsync(documents)</text>
-  <text x="792" y="582" class="m">5 return GetAllAsync()  ← full updated list</text>
+  <text x="792" y="582" class="m">5 return the saved items · Publish(change)</text>
   <text x="792" y="594" class="s">GetAll / GetById / Delete / DeleteAll just delegate to the repository</text>
 
   <!-- GeoJsonMapper -->
@@ -310,9 +310,9 @@
   <!-- ============================== Tests ============================== -->
   <rect x="20" y="1110" width="660" height="120" rx="12" fill="#fafafa" stroke="#9ca3af" stroke-width="1.2"/>
   <text x="36" y="1133" class="h">Tests</text>
-  <text x="36" y="1154" class="b"><tspan font-weight="700">server/MapApp.Api.Tests</tspan> (xUnit, 47 tests)</text>
+  <text x="36" y="1154" class="b"><tspan font-weight="700">server/MapApp.Api.Tests</tspan> (xUnit, 52 tests)</text>
   <text x="46" y="1172" class="m">GeometryValidatorTests  — closing, CCW, dedupe, bow-tie, ranges, holes</text>
-  <text x="46" y="1188" class="m">ServiceTests            — batch all-or-nothing, names, full list</text>
+  <text x="46" y="1188" class="m">ServiceTests            — batch all-or-nothing, saved items, events</text>
   <text x="46" y="1204" class="m">ApiTests (in-memory) · MongoIntegrationTests (Testcontainers)</text>
-  <text x="36" y="1222" class="b"><tspan font-weight="700">client</tspan> (Vitest, 17 tests): geo.test.ts, responseOrder.test.ts (stale responses)</text>
+  <text x="36" y="1222" class="b"><tspan font-weight="700">client</tspan> (Vitest, 24 tests): geo.test.ts, responseOrder.test.ts (stale responses)</text>
 </svg>

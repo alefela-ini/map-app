@@ -29,11 +29,11 @@ public sealed class MongoRepository<T>(IMongoCollection<T> collection, ILogger<M
         return await collection.Find(ById(objectId)).FirstOrDefaultAsync(cancellationToken);
     }
 
-    public async Task InsertManyAsync(IReadOnlyCollection<T> documents, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<T>> InsertManyAsync(IReadOnlyCollection<T> documents, CancellationToken cancellationToken)
     {
         if (documents.Count == 0)
         {
-            return;
+            return [];
         }
 
         try
@@ -59,6 +59,25 @@ public sealed class MongoRepository<T>(IMongoCollection<T> collection, ILogger<M
 
             throw;
         }
+
+        return await StoredVersionsAsync(documents, cancellationToken);
+    }
+
+    /// <summary>
+    /// The documents as they are stored now, in the order of <paramref name="documents"/>. A document whose
+    /// client id matched an earlier save was not written; the one stored earlier (with its own id) is returned.
+    /// </summary>
+    private async Task<IReadOnlyList<T>> StoredVersionsAsync(IReadOnlyCollection<T> documents, CancellationToken cancellationToken)
+    {
+        var clientIds = documents.Where(d => d.ClientId is not null).Select(d => d.ClientId!).ToArray();
+        if (clientIds.Length == 0)
+        {
+            return documents.ToList();
+        }
+
+        var stored = await collection.Find(Builders<T>.Filter.In(ClientIdField, clientIds)).ToListAsync(cancellationToken);
+        var byClientId = stored.ToDictionary(d => d.ClientId!, StringComparer.Ordinal);
+        return documents.Select(d => d.ClientId is not null && byClientId.TryGetValue(d.ClientId, out var s) ? s : d).ToList();
     }
 
     public async Task<bool> DeleteAsync(string id, CancellationToken cancellationToken)

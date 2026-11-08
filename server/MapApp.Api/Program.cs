@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using MapApp.Api.Configuration;
 using MapApp.Api.Infrastructure;
+using MapApp.Api.Realtime;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
@@ -41,6 +42,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors(CorsSettings.PolicyName);
 app.MapControllers();
+app.MapChangeEvents(); // GET /api/events: Server-Sent Events, "collection changed"
 
 // Health checks for orchestrators (Docker, Kubernetes, load balancers). Not proxied by nginx, so not public.
 // Liveness: the process is up. It must not depend on MongoDB, or a database outage would restart the API.

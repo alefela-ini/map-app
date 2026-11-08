@@ -25,16 +25,28 @@ public sealed class InMemoryRepository<T> : IRepository<T> where T : IDocument
         }
     }
 
-    public Task InsertManyAsync(IReadOnlyCollection<T> documents, CancellationToken cancellationToken)
+    public Task<IReadOnlyList<T>> InsertManyAsync(IReadOnlyCollection<T> documents, CancellationToken cancellationToken)
     {
         lock (_lock)
         {
-            // Same contract as MongoRepository: a document whose client id is already stored is skipped.
-            _items.AddRange(documents.Where(d =>
-                d.ClientId is null || !_items.Any(existing => existing.ClientId == d.ClientId)));
-        }
+            // Same contract as MongoRepository: a document whose client id is already stored is skipped,
+            // and the stored one is returned in its place.
+            var stored = new List<T>(documents.Count);
+            foreach (var document in documents)
+            {
+                var existing = document.ClientId is null
+                    ? default
+                    : _items.FirstOrDefault(i => i.ClientId == document.ClientId);
+                if (existing is null)
+                {
+                    _items.Add(document);
+                }
 
-        return Task.CompletedTask;
+                stored.Add(existing ?? document);
+            }
+
+            return Task.FromResult<IReadOnlyList<T>>(stored);
+        }
     }
 
     public Task<bool> DeleteAsync(string id, CancellationToken cancellationToken)

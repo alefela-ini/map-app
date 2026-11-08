@@ -3,7 +3,7 @@
  */
 
 /** Base URL of the API. Empty = same origin (Vite dev proxy / nginx forward `/api` to the server). */
-const API_BASE_URL: string = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '');
+export const API_BASE_URL: string = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '');
 
 export class ApiError extends Error {
   readonly status: number;

@@ -7,7 +7,7 @@ import { request } from './http';
 
 export interface CollectionApi<TDto, TRequest> {
   list(signal?: AbortSignal): Promise<TDto[]>;
-  /** Saves new items and returns the full, updated list. */
+  /** Saves new items and returns the saved items (this batch only, in request order). */
   create(items: TRequest[]): Promise<TDto[]>;
   remove(id: string): Promise<void>;
   removeAll(): Promise<void>;

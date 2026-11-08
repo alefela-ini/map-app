@@ -52,8 +52,8 @@ The screen has four panels: **Map** (left), **Polygon**, **Objects** and **Map D
 - **Add** – enters drawing mode. Click the map to add vertices; click the first vertex again to close the polygon
   (needs at least 3 vertices). `Backspace` removes the last vertex, `Esc` cancels.
   Self-intersecting shapes cannot be closed.
-- **Save** – sends all unsaved polygons to the server (`POST`). The server responds with the full list,
-  which updates the map and the Map Data table.
+- **Save** – sends all unsaved polygons to the server (`POST`). The server responds with the saved polygons,
+  which are added to the map and the Map Data table.
 - **Delete** – deletes the selected polygon (click it on the map or in the table).
   **Delete all** – deletes every polygon from the map and the database. Both ask for confirmation.
 
@@ -79,12 +79,12 @@ All geometries are GeoJSON, positions are **`[longitude, latitude]`**. Errors us
 |----------|-----------------------|--------------------------------------------------------------------------------|
 | `GET`    | `/api/polygons`       | `200` list of polygons                                                         |
 | `GET`    | `/api/polygons/{id}`  | `200` polygon, `404`                                                           |
-| `POST`   | `/api/polygons`       | array of `{ name?, clientId?, geometry: Polygon }` → `200` **full updated list**, `400` |
+| `POST`   | `/api/polygons`       | array of `{ name?, clientId?, geometry: Polygon }` → `200` **the saved items**, `400` |
 | `DELETE` | `/api/polygons/{id}`  | `204`, `404`                                                                   |
 | `DELETE` | `/api/polygons`       | `204` (delete all)                                                             |
 | `GET`    | `/api/objects`        | `200` list of objects                                                          |
 | `GET`    | `/api/objects/{id}`   | `200` object, `404`                                                            |
-| `POST`   | `/api/objects`        | array of `{ name?, clientId?, symbol: "marker" \| "jeep", geometry: Point }` → `200` full list, `400` |
+| `POST`   | `/api/objects`        | array of `{ name?, clientId?, symbol: "marker" \| "jeep", geometry: Point }` → `200` the saved items, `400` |
 | `DELETE` | `/api/objects/{id}`   | `204`, `404`                                                                   |
 | `DELETE` | `/api/objects`        | `204` (delete all)                                                             |
 | `GET`    | `/health/live`        | `200` while the process is running (liveness)                                  |
@@ -136,8 +136,17 @@ client/
 - **GeoJSON end to end.** MongoDB stores `Polygon` / `Point` geometries with `2dsphere` indexes, and the API uses the
   same shape. Conversion between Leaflet's `{lat, lng}` and GeoJSON `[lng, lat]` happens in one place on each side
   (`geo.ts`, `GeoJsonMapper`), which prevents swapped-axis bugs.
-- **Server is the source of truth.** Save returns the full list and the table renders only server data, so what you
-  see in Map Data is what is in MongoDB.
+- **Server is the source of truth.** The table renders only server data. Save returns the saved items ("Return
+  updated data": confirmed with the reviewer to mean the items of that request, not the whole collection), and the
+  client merges them into its list by id.
+- **Live updates (Server-Sent Events).** Other users' changes appear without a page reload. After every write the
+  server sends a tiny event on `GET /api/events` (`event: changed`, `data: polygons|objects`); the client then
+  reloads that collection with the normal GET. Events carry no data; the server keeps, per client, only the set of
+  collections changed since its last event (repeated changes merge, none can be dropped), and every time the stream
+  opens, the first time included, the client reloads everything, so a change made before it was listening is not
+  missed. SSE was chosen over polling (delay,
+  needless requests) and WebSocket/SignalR (two-way channel not needed). A heartbeat every 15 s keeps proxies from
+  closing the stream; the stream ends on shutdown, so the API still stops gracefully.
 - **Batch save is all-or-nothing, best effort.** The whole batch is validated before writing. If MongoDB still rejects
   a document, the already-written part of the batch is deleted again (a compensating action: a standalone MongoDB has
   no multi-document transactions, so this is not a transaction — a crash or a lost connection mid-write can leave
@@ -162,3 +171,5 @@ client/
 - Self-intersection is checked in planar lon/lat space; for very long edges MongoDB's geodesic check may differ.
   The API then returns a `400` with a clear message.
 - No authentication — out of scope for the task.
+- Live updates reach the clients connected to the API instance that handled the write. Several API instances would
+  need a shared channel (Redis pub/sub or MongoDB change streams); deployment is out of scope.

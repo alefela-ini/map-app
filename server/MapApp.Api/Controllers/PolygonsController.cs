@@ -28,7 +28,7 @@ public sealed class PolygonsController(IPolygonService service) : ControllerBase
     }
 
     /// <summary>
-    /// Saves one or more new polygons and returns the full, updated list of polygons.
+    /// Saves one or more new polygons and returns the saved polygons (this batch only, in request order).
     /// </summary>
     [HttpPost]
     [Consumes("application/json")]

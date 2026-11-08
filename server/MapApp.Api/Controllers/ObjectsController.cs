@@ -29,7 +29,7 @@ public sealed class ObjectsController(IMapObjectService service) : ControllerBas
     }
 
     /// <summary>
-    /// Saves a list of new objects and returns the full, updated list of objects.
+    /// Saves a list of new objects and returns the saved objects (this batch only, in request order).
     /// </summary>
     [HttpPost]
     [Consumes("application/json")]

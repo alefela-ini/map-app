@@ -119,7 +119,31 @@ public sealed class ApiTests : IClassFixture<ApiTests.Factory>
         Assert.Equal(HttpStatusCode.OK, retry.StatusCode);
         var second = await retry.Content.ReadFromJsonAsync<JsonElement>();
 
-        Assert.Equal(first.GetArrayLength(), second.GetArrayLength());
+        // Only the saved item is returned, and the retry returns the SAME stored object (same id), not a copy.
+        Assert.Equal(1, first.GetArrayLength());
+        Assert.Equal(first[0].GetProperty("id").GetString(), second[0].GetProperty("id").GetString());
+    }
+
+    [Fact]
+    public async Task Event_stream_tells_connected_clients_which_collection_changed()
+    {
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        using var events = await _client.GetAsync("/api/events", HttpCompletionOption.ResponseHeadersRead, timeout.Token);
+        Assert.Equal("text/event-stream", events.Content.Headers.ContentType?.MediaType);
+        using var reader = new StreamReader(await events.Content.ReadAsStreamAsync(timeout.Token));
+        Assert.Equal("retry: 3000", await reader.ReadLineAsync(timeout.Token)); // subscribed
+
+        await _client.PostAsync("/api/objects", Json("""
+            [{ "symbol": "jeep", "geometry": { "type": "Point", "coordinates": [34.79, 32.07] } }]
+            """));
+
+        string? line;
+        do
+        {
+            line = await reader.ReadLineAsync(timeout.Token);
+        }
+        while (line is not null && !line.StartsWith("data:", StringComparison.Ordinal));
+        Assert.Equal("data: objects", line);
     }
 
     [Fact]

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { subscribeToChanges } from './api/changes';
 import { objectsApi, polygonsApi } from './api/mapApi';
 import {
   buildMapDataRows,
@@ -32,6 +33,22 @@ const IDLE: InteractionMode = { kind: 'idle' };
 export default function App() {
   const polygons = useEditableCollection(polygonsApi, polygonFromDto, polygonToRequest);
   const objects = useEditableCollection(objectsApi, objectFromDto, objectToRequest);
+
+  // Live updates: reload a collection when anyone (another user or this tab) changes it on the server,
+  // and both whenever the stream (re)connects, because changes made before that were not announced to us.
+  const { refresh: refreshPolygons } = polygons;
+  const { refresh: refreshObjects } = objects;
+  useEffect(
+    () =>
+      subscribeToChanges(
+        (topic) => (topic === 'polygons' ? refreshPolygons() : refreshObjects()),
+        () => {
+          refreshPolygons();
+          refreshObjects();
+        },
+      ),
+    [refreshPolygons, refreshObjects],
+  );
 
   const [mode, setMode] = useState<InteractionMode>(IDLE);
   const [drawingVertices, setDrawingVertices] = useState<LatLng[]>([]);

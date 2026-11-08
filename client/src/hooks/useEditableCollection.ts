@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { CollectionApi } from '../api/mapApi';
 import { ApiError, describeError } from '../api/http';
 import type { EditableItem } from '../types';
+import { mergeById } from './mergeById';
 import { createResponseOrder } from './responseOrder';
 
 /** How many times the initial GET is tried before the error is shown. */
@@ -97,7 +98,7 @@ export function useEditableCollection<TItem extends EditableItem, TDto, TRequest
     setDrafts((current) => current.map((item) => (item.id === id ? { ...item, ...patch } : item)));
   }, []);
 
-  /** POSTs all drafts; on success the server's full list replaces the local one. */
+  /** POSTs all drafts; the response holds only the saved items, which are merged into the saved list. */
   const saveDrafts = useCallback(async () => {
     if (drafts.length === 0) return;
     const batch = drafts;
@@ -105,13 +106,24 @@ export function useEditableCollection<TItem extends EditableItem, TDto, TRequest
 
     await run(async () => {
       const ticket = responseOrder.next();
-      applyList(ticket, await api.create(batch.map(toRequest)));
-      // The batch is stored even if its list was not applied (a newer list already contains it).
+      const stored = (await api.create(batch.map(toRequest))).map(fromDto);
+      // Merge even if a newer list is already shown (merging by id cannot lose anything), and record the
+      // ticket so that a GET started before this Save cannot overwrite the result later.
+      responseOrder.tryApply(ticket);
+      setSaved((current) => mergeById(current, stored));
       // Keep drafts created while the request was in flight.
       setDrafts((current) => current.filter((d) => !batchIds.has(d.id)));
       setSelectedId((current) => (current !== null && batchIds.has(current) ? null : current));
     }, batch.map((d) => d.name));
-  }, [api, applyList, drafts, responseOrder, run, toRequest]);
+  }, [api, drafts, fromDto, responseOrder, run, toRequest]);
+
+  /**
+   * Reloads the saved list in the background (another user changed it). Errors are ignored: the next change
+   * event or the stream's reconnect reloads again, and an error banner for a background refresh would confuse.
+   */
+  const refresh = useCallback(() => {
+    reload().catch(() => {});
+  }, [reload]);
 
   /** Deletes the selected item: drafts locally, saved items on the server. */
   const deleteSelected = useCallback(async () => {
@@ -164,5 +176,6 @@ export function useEditableCollection<TItem extends EditableItem, TDto, TRequest
     saveDrafts,
     deleteSelected,
     deleteAll,
+    refresh,
   };
 }

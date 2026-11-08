@@ -1,6 +1,7 @@
 using MapApp.Api.Contracts;
 using MapApp.Api.Data;
 using MapApp.Api.Models;
+using MapApp.Api.Realtime;
 using MapApp.Api.Validation;
 using MongoDB.Bson;
 
@@ -14,7 +15,7 @@ public interface IMapObjectService
     Task<MapObjectDto?> GetByIdAsync(string id, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Validates and stores all objects, then returns the full, updated list of objects.
+    /// Validates and stores all objects, then returns the stored items (only this batch, in request order).
     /// </summary>
     /// <exception cref="RequestValidationException">Any object is invalid; nothing is stored.</exception>
     Task<IReadOnlyList<MapObjectDto>> CreateManyAsync(IReadOnlyList<CreateMapObjectRequest>? requests, CancellationToken cancellationToken);
@@ -25,7 +26,10 @@ public interface IMapObjectService
 }
 
 /// <inheritdoc />
-public sealed class MapObjectService(IRepository<MapObjectDocument> repository, TimeProvider timeProvider) : IMapObjectService
+public sealed class MapObjectService(
+    IRepository<MapObjectDocument> repository,
+    TimeProvider timeProvider,
+    IChangeNotifier notifier) : IMapObjectService
 {
     public async Task<IReadOnlyList<MapObjectDto>> GetAllAsync(CancellationToken cancellationToken)
     {
@@ -79,13 +83,30 @@ public sealed class MapObjectService(IRepository<MapObjectDocument> repository, 
         // Validate the whole batch before writing anything.
         errors.ThrowIfAny();
 
-        await repository.InsertManyAsync(documents, cancellationToken);
-        return await GetAllAsync(cancellationToken);
+        var stored = await repository.InsertManyAsync(documents, cancellationToken);
+        notifier.Publish(ChangeTopics.Objects);
+        return stored.Select(GeoJsonMapper.ToDto).ToList();
     }
 
-    public Task<bool> DeleteAsync(string id, CancellationToken cancellationToken) =>
-        repository.DeleteAsync(id, cancellationToken);
+    public async Task<bool> DeleteAsync(string id, CancellationToken cancellationToken)
+    {
+        var deleted = await repository.DeleteAsync(id, cancellationToken);
+        if (deleted)
+        {
+            notifier.Publish(ChangeTopics.Objects);
+        }
 
-    public Task<long> DeleteAllAsync(CancellationToken cancellationToken) =>
-        repository.DeleteAllAsync(cancellationToken);
+        return deleted;
+    }
+
+    public async Task<long> DeleteAllAsync(CancellationToken cancellationToken)
+    {
+        var count = await repository.DeleteAllAsync(cancellationToken);
+        if (count > 0)
+        {
+            notifier.Publish(ChangeTopics.Objects);
+        }
+
+        return count;
+    }
 }

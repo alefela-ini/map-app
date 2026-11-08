@@ -1,6 +1,7 @@
 using MapApp.Api.Contracts;
 using MapApp.Api.Data;
 using MapApp.Api.Models;
+using MapApp.Api.Realtime;
 using MapApp.Api.Validation;
 using MongoDB.Bson;
 
@@ -14,7 +15,7 @@ public interface IPolygonService
     Task<PolygonDto?> GetByIdAsync(string id, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Validates and stores all polygons, then returns the full, updated list of polygons.
+    /// Validates and stores all polygons, then returns the stored items (only this batch, in request order).
     /// </summary>
     /// <exception cref="RequestValidationException">Any polygon is invalid; nothing is stored.</exception>
     Task<IReadOnlyList<PolygonDto>> CreateManyAsync(IReadOnlyList<CreatePolygonRequest>? requests, CancellationToken cancellationToken);
@@ -25,7 +26,10 @@ public interface IPolygonService
 }
 
 /// <inheritdoc />
-public sealed class PolygonService(IRepository<PolygonDocument> repository, TimeProvider timeProvider) : IPolygonService
+public sealed class PolygonService(
+    IRepository<PolygonDocument> repository,
+    TimeProvider timeProvider,
+    IChangeNotifier notifier) : IPolygonService
 {
     public async Task<IReadOnlyList<PolygonDto>> GetAllAsync(CancellationToken cancellationToken)
     {
@@ -74,13 +78,30 @@ public sealed class PolygonService(IRepository<PolygonDocument> repository, Time
         // Validate the whole batch before writing anything.
         errors.ThrowIfAny();
 
-        await repository.InsertManyAsync(documents, cancellationToken);
-        return await GetAllAsync(cancellationToken);
+        var stored = await repository.InsertManyAsync(documents, cancellationToken);
+        notifier.Publish(ChangeTopics.Polygons);
+        return stored.Select(GeoJsonMapper.ToDto).ToList();
     }
 
-    public Task<bool> DeleteAsync(string id, CancellationToken cancellationToken) =>
-        repository.DeleteAsync(id, cancellationToken);
+    public async Task<bool> DeleteAsync(string id, CancellationToken cancellationToken)
+    {
+        var deleted = await repository.DeleteAsync(id, cancellationToken);
+        if (deleted)
+        {
+            notifier.Publish(ChangeTopics.Polygons);
+        }
 
-    public Task<long> DeleteAllAsync(CancellationToken cancellationToken) =>
-        repository.DeleteAllAsync(cancellationToken);
+        return deleted;
+    }
+
+    public async Task<long> DeleteAllAsync(CancellationToken cancellationToken)
+    {
+        var count = await repository.DeleteAllAsync(cancellationToken);
+        if (count > 0)
+        {
+            notifier.Publish(ChangeTopics.Polygons);
+        }
+
+        return count;
+    }
 }

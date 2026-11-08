@@ -1,6 +1,7 @@
 using MapApp.Api.Configuration;
 using MapApp.Api.Data;
 using MapApp.Api.Models;
+using MapApp.Api.Realtime;
 using MapApp.Api.Services;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
@@ -49,6 +50,8 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddMapServices(this IServiceCollection services)
     {
         services.AddSingleton(TimeProvider.System);
+        services.AddSingleton<ChangeNotifier>();
+        services.AddSingleton<IChangeNotifier>(sp => sp.GetRequiredService<ChangeNotifier>());
         services.AddScoped<IPolygonService, PolygonService>();
         services.AddScoped<IMapObjectService, MapObjectService>();
         return services;
